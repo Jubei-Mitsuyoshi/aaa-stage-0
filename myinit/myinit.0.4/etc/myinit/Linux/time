@@ -1,0 +1,18 @@
+#! /bin/sh
+#
+# Set up system clock
+#
+PARAMS="--utc"
+#PARAMS="--localtime"
+
+case "$1" in
+
+    start)
+	hwclock --hctosys $PARAMS
+	exit 0
+	;;
+
+    stop)
+	hwclock --systohc $PARAMS
+	;;
+esac

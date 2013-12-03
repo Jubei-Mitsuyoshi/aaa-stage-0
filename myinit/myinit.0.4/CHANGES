@@ -1,0 +1,10 @@
+In version 0.3:
+
+* rewritten to be more robust
+* still using simple reference counts
+
+In version 0.4:
+
+* added man pages
+* tested with `dietlibc' and made corrections (Nikola Vladov)
+* MYINIT_HOME

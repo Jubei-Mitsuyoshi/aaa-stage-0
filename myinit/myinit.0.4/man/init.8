@@ -1,0 +1,88 @@
+.TH init 8 "December 2007" "init(8)" "MYINIT 0.4"
+.SH NAME
+init \- program which manages system services and processes
+.SH SYNOPSIS
+.B /sbin/init
+[ \fIservice1\fR [ \fIservice2\fR ... ] ]
+
+.SH DESCRIPTION
+\fBinit\fP is a program whose purpose is to control how the system starts up,
+how it shuts down and, in the meantime, to monitor system processes and
+services.  A `service' is basically anything that the computer can start and
+stop doing.  Each service has a unique name.  What it means to `start' and
+`stop' a service depends on the service.
+.PP
+The command-line arguments of \fBinit\fP are the names of services it will
+attempt to start.  By default, when all services are stopped or if all services
+fail to start, \fBinit\fP will reboot the system.
+.SH OPERATION
+When \fBinit\fP starts, it first invokes the \fI/etc/init.boot\fP program,
+passing its own command line arguments.  \fBinit\fP will not start the services
+named in its command-line arguments unless \fIinit.boot\fP finishes and itself
+has not requested any services.
+.PP
+To request to start or stop a service or process, use the \fIstart\fP(8) and
+\fIstop\fP(8) commands (these commands can also be used by initscripts).
+.PP
+The \fIinitset\fP(8) command allows you to change the running \fBinit\fP's
+settings and environment.
+.PP
+The \fIreboot\fP(8), \fIhalt\fP(8) and \fIpoweroff\fP(8) commands can be used to
+shut down the system.
+.PP
+`Initscripts' are programs which are invoked by \fBinit\fP in order to control
+the operation of a service.  They reside in directory \fI/etc/init\fR.  They are
+given one command line argument which says what to do.  At this time, this can
+be `start' or `stop'.  Other operations may be defined in the future (probably
+`restart' and `reload'), so an initscript should do nothing if it does not
+recognize its parameter.  For the `start' operation, an initscript's exit status
+says whether it was successful or not.
+.SH ENVIRONMENT
+\fBinit\fP sets and/or accepts these environment variables:
+.IP \fBMYINIT\fP
+Given only to initscripts and not to any other processes.  This is important.
+It is used by \fIstart\fP and \fIstop\fP to know whether to add `top-level'
+references or not.  `Top-level' references are those that were added by the
+bootloader or a human operator.  Removing all top-level references will,
+indirectly, remove all others.
+.IP \fBMYINIT_HOME\fP
+The directory where initscripts are found.  If this is not set, the default is
+assumed (\fI/etc/init\fR).  This variable can be inherited by \fIstart\fP,
+\fIstop\fP, \fIreboot\fP, \fIhalt\fP and \fIpoweroff\fP so it can be used to
+infer the name of the FIFO to be used for communication with the calling
+\fBinit\fP.
+.SH SIGNALS
+\fBinit\fP may receive these signals:
+.PP
+.IP \fBSIGINT\fP
+Linux sends this signal when Ctrl+Alt+Del is pressed.  \fBinit\fP will invoke
+the command that was specified with \fIinitset --on-ctrlaltdel\fP.
+.IP \fBSIGWINCH\fP
+Linux sends this signal when a key combination is pressed which is bound to the
+\fIKeyboardSignal\fP keysym.  \fBinit\fP will invoke the command that was
+specified with \fIinitset --on-keyboard\fP.
+.IP \fBSIGUSR1\fP
+Ignored!  I do not risk reopening the FIFO because some requests may be lost.
+This is why the FIFO is now at \fI/etc\fP.  You had better not mount anything
+there!
+.SH FILES
+.IP "\fB/etc/init\fP (or \fB$MYINIT_HOME\fP)"
+This is the directory which contains the initscripts.
+.IP "\fB/etc/init.in\fP (or \fB$MYINIT_HOME.in\fP)"
+This is the FIFO for sending commands to \fBinit\fP.
+.SH DIAGNOSTICS
+\fBinit\fP will refuse to respawn a process more than 8 times in 2 minutes (a
+minimum period of 15 seconds per respawn).  It will stall the process for 5
+minutes.  You will see it as a forked `init' process which you can signal.
+.SH AUTHOR
+stamit@stamit.gr
+.SH "SEE ALSO"
+start(8),
+stop(8),
+initset(8),
+reboot(8),
+halt(8),
+poweroff(8),
+sh(1),
+getty(1),
+login(1)

@@ -1,0 +1,26 @@
+#! /bin/sh
+#
+# Register miscellaneous binary formats
+#
+DEPENDS='Linux/proc'
+
+case "$1" in
+
+    start)
+	mystart $DEPENDS || exit 1
+
+	if [ -f /proc/sys/fs/binfmt_misc/register ]; then
+		cat /etc/binfmt_misc.conf >/proc/sys/fs/binfmt_misc/register 2>/dev/null
+	fi
+
+	exit 0
+	;;
+
+    stop)
+	if [ -f /proc/sys/fs/binfmt_misc/register ]; then
+		echo -1 >/proc/sys/fs/binfmt_misc/status 2>/dev/null
+	fi
+
+	mystop $DEPENDS
+	;;
+esac

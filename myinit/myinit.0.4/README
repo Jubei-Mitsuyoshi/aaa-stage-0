@@ -1,0 +1,116 @@
+
+
+MYINIT 0.4
+==========
+
+`myinit' is a simple init scheme based on reference counting.  It supports
+dependencies and parallel execution.  You can switch services on and off with
+commands such as `start foo' and `stop bar'.  The same `start' and `stop'
+commands can be used by the initscripts themselves, which is how dependencies
+are established.
+
+The `start' command will `reference' a service (add 1 to its reference count)
+and the `stop' command will `dereference' a service (subtract 1 from its
+reference count).  When a service is referenced for the first time, its
+initscript runs which does what is needed to start the service.  When a
+service's reference count becomes 0 (meaning it is not wanted or needed anymore)
+its initscript runs again to stop the service (kill its processes, do cleanup
+etc. depending on the service).
+
+The `start' command can take multiple arguments.  When `start' exits, either ALL
+the named services will be started successfuly or NONE will be referenced (as if
+`start' had not run).  However, the `stop' command will not wait and will always
+succeed.
+
+The `start' and `stop' commands, if given an absolute pathname as the first
+argument, will interpret their arguments as a command line of a program to run
+in the background and to respawn automatically whenever it exits (i.e. a
+daemon).  The `stop' command, will not only send the SIGTERM signal, but will
+also wait for the process to actually finish.
+
+`initset' can modify the environment variables of the `init' process.  These
+will be inherited by initscripts and daemons.
+
+
+Things to remember
+------------------
+
+* DO NOT expect this program to simply work out-of-the-box without your knowing
+  what you are doing.  Remember that there is ABSOLUTELY NO WARRANTY!
+
+* DO NOT modify dependencies (normally a "DEPENDS=xxxx" line at the
+  beginning of each init script) while a service is up.  IF YOU DO, then you
+  must also update reference counts, with commands such as `INIT=s start foo'
+  `INIT=s stop bar' for each dependency you add (foo) or remove (bar).
+
+
+How to compile
+--------------
+
+For the development of this program I used the GNU tools under a Debian system.
+It has also been tested with `dietlibc'.  Simply say:
+
+	make
+
+Of course, I cannot predict what might go wrong on your system!  You might need
+to perform some magic.
+
+
+How to install
+--------------
+
+Installation is manual, so you know what you are doing.
+
+By default, all program names and configuration file names are prefixed with
+`my' (`mystart', `mypoweroff', `myreboot').  You can turn that off, but I don't
+recommend it (for now).  See the Makefile.
+
+After you compile:
+
+1. PROGRAMS.  Copy all executables and symlinks in `sbin' into your system's
+   `/sbin' directory.
+
+2. CONFIGURATION.  Copy `etc/init.boot' (or `etc/myinit.boot') to the `/etc'
+   directory.  Do the same with the `etc/init' (or `etc/myinit') tree.  You may
+   want to take a look inside first.  You must also create a FIFO named
+   `/etc/init.in' (or `/etc/myinit.in').  Make sure its permissions allow only
+   the superuser to access it!  Also, you should not mount anything on `/etc'!
+   If you want the FIFO to be called something else, edit `config.h'.
+
+3. Go ahead and edit `/etc/init.boot' (or `/etc/myinit.boot') to decide which
+   services you want to start by default.  Be conservative at first because you
+   don't know if the whole bag of scripts will work on your system.  First start
+   only `console' which will simply spawn a `getty' on the first virtual
+   terminal.  That will work, provided you have a `getty' program named `getty'
+   and not `xyzgettyabc'.  When you login as root you will be able to start more
+   services using the `start' (or `mystart') command.
+
+4. DOCUMENTATION.  You can find man pages in the `man' subdirectory.
+
+5. BOOTLOADER.  If you installed as `/sbin/myinit', set up your system so it
+   allows you to use this program instead of your old `/sbin/init'.  How you do
+   that depends on which bootloader you are using (LILO or GRUB or whatever).
+
+CAUTION!  Make sure that your system is always bootable and that you understand
+exactly WHAT will happen and HOW it will happen.
+
+
+Things left to do
+-----------------
+
+- better logging
+- test on more AND DIFFERENT systems (BSD anyone?)
+- improvements to `stop'
+	- multiple processes
+	- SIGKILL if a process takes too long to finish
+- X session management
+- make usable by ordinary users
+- power management
+- internationalization
+
+
+Feedback
+--------
+
+For support, use the SourceForge pages.
+

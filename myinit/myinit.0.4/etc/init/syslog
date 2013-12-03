@@ -1,0 +1,39 @@
+#! /bin/sh
+DEPENDS='root'
+syslogd='/sbin/syslogd -n'
+klogd='/sbin/klogd -n'
+
+case "$1" in
+
+    start)
+	start $DEPENDS || exit 1
+
+	start $syslogd
+	start $klogd
+
+	if [ ! -e /dev/xconsole ]; then
+		mknod -m 640 /dev/xconsole p
+	else
+		chmod 0640 /dev/xconsole
+	fi
+	chown root:adm /dev/xconsole
+
+	exit 0
+	;;
+
+    stop)
+	stop $klogd
+	stop $syslogd
+
+	stop $DEPENDS
+	;;
+
+    restart)
+	echo "Restarting logging daemons..."
+	stop $klogd
+	stop $syslogd
+	sleep 1
+	start $syslogd
+	start $klogd
+	;;
+esac

@@ -1,0 +1,32 @@
+#! /bin/sh
+#
+# Load user-specified modules.
+#
+case "$1" in
+
+    start)
+	KVER=`uname -r`
+	KMAJ=${KVER%${KVER#*.*[^.]}}
+	KMAJ=${KMAJ%.}
+
+	if [ -e /etc/modules-$KVER ]; then
+		MODULES_FILE=/etc/modules-$KVER
+	elif [ -e /etc/modules-$KMAJ ]; then
+		MODULES_FILE=/etc/modules-$KMAJ
+	else
+		MODULES_FILE=/etc/modules
+	fi
+
+	if [ -f "$MODULES_FILE" ]; then
+		while read module args; do
+			[ "$module" = "#" -o -z "$module" ] && continue
+			modprobe $module $args
+		done <"$MODULES_FILE"
+	fi
+
+	exit 0
+	;;
+
+    stop)
+	;;
+esac

@@ -1,0 +1,118 @@
+#! /bin/bash
+DEPENDS='Linux/proc Linux/modules'
+RC_ORDER="pci usb isapnp"
+HOTPLUG=/sbin/hotplug
+
+[ -e /etc/default/hotplug ] && . /etc/default/hotplug
+
+prune() {
+	unset prune_output prune_discard
+	local discard
+
+	for x in $1; do
+		unset discard
+		for y in $2; do
+			[ $x = $y ] && discard=yes
+		done
+		if [ "$discard" ]; then
+			prune_discard="$prune_discard $x"
+		else
+			prune_output="$prune_output $x"
+		fi
+	done
+}
+
+sort_with_deps() {
+	local unordered
+
+	prune "$1" "$2"
+	unordered=$prune_output
+	prune "$2" "$prune_discard"
+	echo "$prune_discard $unordered"
+
+	unset prune_output prune_discard
+}
+
+quiet_printk() {
+	[ -w /proc/sys/kernel/printk -a "$QUIET" ] || return 0
+	SAVED_LOGLEVEL=$(cat /proc/sys/kernel/printk)
+	echo "1 4 1 7" > /proc/sys/kernel/printk
+}
+
+restore_printk() {
+	[ "$SAVED_LOGLEVEL" ] || return 0
+	echo "$SAVED_LOGLEVEL" > /proc/sys/kernel/printk
+}
+
+run_rcs() {
+	for RC in /etc/hotplug/*.rc; do
+		local basename=${RC#/etc/hotplug/}
+		SUBSYSTEMS="$SUBSYSTEMS ${basename%.rc}"
+	done
+
+	SUBSYSTEMS=$(sort_with_deps "$SUBSYSTEMS" "$RC_ORDER")
+
+	for name in $SUBSYSTEMS; do
+		if [ "$(eval echo \$HOTPLUG_RC_$name)" = no \
+		     -o ! -x /etc/hotplug/$name.rc ]; then
+			echo "Hotplug subsystem $name is disabled."
+		else
+			/etc/hotplug/$name.rc $1
+		fi
+	done
+}
+
+case "$1" in
+
+    start)
+	mystart $DEPENDS || exit 1
+
+	[ -x "$HOTPLUG" ] || exit 0
+	if [ ! -f /proc/sys/kernel/hotplug ]; then
+		echo "Kernel hotplug support not enabled."
+		exit 0
+	fi
+
+	if [ -f /etc/hotplug.conf ]; then
+		echo "Initializing hardware..."
+		ACTION=start "$HOTPLUG"
+	else
+		quiet_printk
+		echo "Starting hotplug subsystem..."
+		run_rcs start
+		restore_printk
+	fi
+
+	echo "$HOTPLUG" >/proc/sys/kernel/hotplug
+	;;
+
+    stop)
+	if [ -f /etc/hotplug.conf ]; then
+		echo "Finalizing hardware..."
+		ACTION=stop "$HOTPLUG"
+	else
+		quiet_printk
+		echo "Stopping hotplug subsystem..."
+		run_rcs stop
+		restore_printk
+	fi
+
+	mystop $DEPENDS
+	;;
+
+    restart)
+	quiet_printk
+	echo "Stopping hotplug subsystem..."
+	run_rcs stop
+	echo "Starting hotplug subsystem..."
+	run_rcs start
+	restore_printk
+	;;
+
+    status)
+	unset QUIET
+	run_rcs status
+	;;
+esac
+
+exit 0

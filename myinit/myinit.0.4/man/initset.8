@@ -1,0 +1,42 @@
+.TH initset 8 "December 2007" "initset(8)" "MYINIT 0.4"
+.SH NAME
+initset \- change environment and settings of running init
+.SH SYNOPSIS
+.B initset
+[--] \fIenv\fR=\fIvar\fR...
+.br
+.B initset
+-[ckh] \fIprogram\fR [ \fIarg\fR ... ]
+.br
+.B initset
+-x
+.br
+.SH DESCRIPTION
+The \fBinitset\fP command is used for changing environment variables and
+settings of the running \fIinit\fR process, and for performing miscellaneous
+operations.
+.SH OPTIONS
+.IP "-c \fIprogram\fR [ \fIarg\fR ... ]"
+Sets a command to execute when Ctrl+Alt+Del is pressed.
+.IP "-k \fIprogram\fR [ \fIarg\fR ... ]"
+Sets a command to execute when a key combination is pressed which is bound to
+the \fIKeyboardSignal\fP keysym is pressed.
+.IP "-h \fIprogram\fR [ \fIarg\fR ... ]"
+Sets a command to execute when all services have stopped.
+.IP -x
+Sends SIGKILL to all processes which are direct children of \fIinit\fR but were
+not spawned by \fIinit\fR.
+.SH ENVIRONMENT
+\fBinitset\fP uses these environment variables:
+.IP \fBMYINIT_HOME\fP
+This is used to infer the name of the FIFO to use to communicate with
+\fIinit\fR.  If this is not set, the default is assumed (\fI/etc/init\fR).
+.SH AUTHOR
+stamit@stamit.gr
+.SH "SEE ALSO"
+init(8),
+start(8),
+stop(8),
+reboot(8),
+halt(8),
+poweroff(8)

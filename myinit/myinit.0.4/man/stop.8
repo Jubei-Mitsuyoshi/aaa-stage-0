@@ -1,0 +1,39 @@
+.TH stop 8 "December 2007" "stop(8)" "MYINIT 0.4"
+.SH NAME
+stop \- dereference services
+.SH SYNOPSIS
+.B stop
+\fIservice1\fR [ \fIservice2\fR ... ]
+.br
+.B stop
+\fI/absolute/path/to/program\fR [ \fIargument1\fR [ \fIargument2\fR ... ] ]
+
+.SH DESCRIPTION
+The \fBstop\fP command will `dereference' a set of services, meaning it will
+note that the services are not needed anymore (by one caller) and will stop them
+if they not needed for anything else.  It will not wait for the services to stop
+(it may only cause their initscripts to be spawned).
+.PP
+You should use this command to stop services and never call the initscripts
+directly.
+.PP
+If \fBstop\fP is given an absolute pathname as the first argument, it will
+assume that it refers to a daemon, some of the processes of which must be
+killed.  The daemon will receive the SIGTERM signal and \fBstop\fP will wait
+until it exits.
+.SH ENVIRONMENT
+\fBstop\fP uses these environment variables:
+.IP \fBMYINIT\fP
+This is set (or not set) by \fIinit\fR.  It must be left unchanged.
+.IP \fBMYINIT_HOME\fP
+This is used to infer the name of the FIFO to use to communicate with
+\fIinit\fR.  If this is not set, the default is assumed (\fI/etc/init\fR).
+.SH AUTHOR
+stamit@stamit.gr
+.SH "SEE ALSO"
+init(8),
+start(8),
+initset(8),
+reboot(8),
+halt(8),
+poweroff(8)

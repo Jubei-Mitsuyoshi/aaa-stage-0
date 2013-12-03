@@ -1,0 +1,34 @@
+#!/bin/sh
+#
+# DARPA port to RPC program number mapper.
+#
+DEPENDS='root'
+OPTIONS=''
+
+[ -f /etc/default/portmap ] && . /etc/default/portmap
+
+case "$1" in
+
+    start)
+	[ -x /sbin/portmap ] || exit 5
+
+	mystart $DEPENDS || exit 1
+
+	/sbin/portmap -- $OPTIONS
+
+	if [ -f /var/run/portmap.state ]; then
+		sleep 1
+		pmap_set </var/run/portmap.state
+		rm -f /var/run/portmap.state
+	fi
+
+	exit 0
+	;;
+
+    stop)
+	pmap_dump >/var/run/portmap.state
+	killall /sbin/portmap
+
+	mystop $DEPENDS
+	;;
+esac

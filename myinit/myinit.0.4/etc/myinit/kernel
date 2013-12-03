@@ -1,0 +1,20 @@
+#! /bin/sh
+#
+# Kernel and hardware initialization.
+#
+KERNEL="`uname -s`"
+
+cd etc/myinit
+DEPENDS=`echo "$KERNEL"/*`
+cd ../..
+
+case "$1" in
+
+    start)
+	mystart $DEPENDS
+	;;
+
+    stop)
+	mystop $DEPENDS
+	;;
+esac

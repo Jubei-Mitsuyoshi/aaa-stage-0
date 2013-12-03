@@ -1,0 +1,22 @@
+#! /bin/sh
+#
+# Prepare ISA PnP devices.
+#
+case "$1" in
+
+    start)
+	if [ "$PROBE_ISAPNP" = yes -a ! -r /etc/isapnp.conf ]; then
+		echo "Configuring PnP..."
+		pnpdump -c >/etc/isapnp.conf
+	fi
+	if [ -r /etc/isapnp.conf ]; then
+		echo "Initializing PnP devices..."
+		isapnp /etc/isapnp.conf
+	fi
+
+	exit 0
+	;;
+
+    stop)
+	;;
+esac

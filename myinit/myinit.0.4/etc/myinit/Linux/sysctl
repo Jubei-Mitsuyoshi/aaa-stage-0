@@ -1,0 +1,24 @@
+#! /bin/bash
+#
+# Configure kernel parameters
+#
+DEPENDS='Linux/proc'
+
+case "$1" in
+
+    start)
+	mystart $DEPENDS || exit 1
+
+	if [ -x /sbin/sysctl -a -f /etc/sysctl.conf ]; then
+
+		echo "Configuring kernel..."
+		/sbin/sysctl -q -p
+	fi
+
+	exit 0
+	;;
+
+    stop)
+	mystop $DEPENDS
+	;;
+esac

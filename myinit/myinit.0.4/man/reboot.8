@@ -1,0 +1,23 @@
+.TH reboot 8 "December 2007" "reboot(8)" "MYINIT 0.4"
+.SH NAME
+reboot \- reboot the system
+.SH SYNOPSIS
+.B reboot
+
+.SH DESCRIPTION
+The \fBreboot\fP command will cause all services to be stopped, and the system
+to reboot.
+.SH ENVIRONMENT
+\fBreboot\fP uses these environment variables:
+.IP \fBMYINIT_HOME\fP
+This is used to infer the name of the FIFO to use to communicate with
+\fIinit\fR.  If this is not set, the default is assumed (\fI/etc/init\fR).
+.SH AUTHOR
+stamit@stamit.gr
+.SH "SEE ALSO"
+init(8),
+start(8),
+stop(8),
+initset(8),
+halt(8),
+poweroff(8)

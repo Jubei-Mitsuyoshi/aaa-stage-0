@@ -1,0 +1,14 @@
+#! /bin/sh
+#
+# Console access for system administrator.
+#
+case "$1" in
+
+    start)
+	start /sbin/getty /dev/tty1 9600
+	;;
+
+    stop)
+	stop /sbin/getty /dev/tty1
+	;;
+esac

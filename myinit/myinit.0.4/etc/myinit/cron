@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# Start/stop the cron daemon.
+#
+DEPENDS='root'
+PROG=/usr/sbin/cron
+ARGS=''
+#ARGS='-l'
+
+case "$1" in
+
+    start)
+	test -f "$PROG" || exit 5
+
+	mystart $DEPENDS || exit 1
+
+	mystart "$PROG" -f $ARGS
+
+	exit 0
+	;;
+
+    stop)
+	mystop "$PROG"
+
+	mystop $DEPENDS
+	;;
+esac
