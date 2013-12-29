@@ -1,0 +1,710 @@
+bilibop (0.4.20) unstable; urgency=low
+
+  * bilibop-common:
+  * Modify common.sh: replace '/sbin/udevadm' by just 'udevadm', and declare a
+    udevadm() function if the command itself is not in the PATH. This should
+    work with all versions of udev.
+  * Modify device_node_from_major_minor(): rely on the contents of /dev/block
+    (as these symlinks are not created by udev).
+  * Modify drivemap.sh: add a missing debug command at the beginning of a
+    function.
+  * Modify lib/bilibop/disk: set -e
+  * Fix a typo in drivemap.sh and the drivemap command: rename function
+    _drivemap_max_mp_lenght() -> _drivemap_max_mp_length(), and also fix the
+    same spelling error for the variable lenght -> length.
+  * Update bilibop(7) and bilibop.conf(5) manpages (and also the french
+    translations).
+  * Update documentation (README.Debian, examples/bilibop.conf, misc/*.txt).
+
+  * bilibop-rules:
+  * Add translations for the debconf templates:
+    + Italian: thanks to Beatrice Torracca <beatricet@libero.it>
+      Closes: #727755.
+    + Portuguese: thanks to Américo Monteiro <a_monteiro@gmx.com>
+      Closes: #730000.
+  * Modify the config maintscript and the initramfs script: as the --run
+    option no more works for 'udevadm info', use the hardcoded /run/udev
+    instead.
+  * Modify the udev rules file: rely on the 'removable' attribute to know that
+    a device is a disk (as for the 'partition' attribute to know that a device
+    is a partition); also do not set unconditionally Udisks ENV variables for
+    the disk; reorder some rules, rename LABELs, + other cosmetics.
+  * Update bilibop_rules_generator helper script for consistency.
+  * Fix management of errors in physical_volumes_filter and pvfilter.sh
+  * Remove a reference to a non-existent manpage in pvfilter.sh
+  * Fix a spelling error in the help page of physical_volumes_filter.
+  * Modify _pvfilter_find_dev_links(): use a best 'find' commandline, and
+    simplify its output filter (grep).
+  * Modify postinst to regenerate the cache file if the filter value has been
+    modified in lvm.conf
+  * Add support for the LVM 'global_filter' variable (lvm2 >= 2.02.98):
+    + Add '_pvfilter_has_global()' function in pvfilter.sh: just tests if the
+      'global_filter' variable is supported by the version of lvm2 actually
+      installed on the system.
+    + Modify _pvfilter_init_lvm_configfile().
+    + Modify _pvfilter_init_device_filters().
+    + Add --global and --noglobal options to the helper script.
+    + Rename debconf template: 'bilibop-rules/physical_volumes_filter/warning'
+      -> 'bilibop-rules/physical_volumes_filter/without_global_filter/warning'
+    + Add 'bilibop-rules/physical_volumes_filter/with_global_filter/warning'
+      debconf template.
+    + Update maintscripts.
+  * Add support for Udisks 2.x (udisks2 package):
+    + Modify the udev rules file to set udisks2 variables as well as udisks
+      variables.
+    + Update bilibop_rules_generator helper script for consistency.
+    + Modify lsbilibop script: grep also udisks2 variables.
+  * Replace all occurences of 'eval ${foo}' by [ "${foo}" = "true" ] (as eval
+    ${foo} is true if ${foo} is empty).
+  * Replace all occurences of '\s' by the POSIX class '[[:blank:]]' in grep
+    commands (see bug #729581/#730146).
+  * Update lsbilibop(8) manpage (and also the french translation).
+  * Update documentation (README.Debian, examples/bilibop.conf).
+
+  * bilibop-lockfs:
+  * Add 'random' as a possible value for BILIBOP_LOCKFS_SWAP_POLICY: this
+    allows one to specify to use a swap device only if it is encrypted with a
+    random key.
+    + Add new function is_randomly_encrypted() in lockfs.sh
+    + Modify get_swap_policy() and apply_swap_policy() in lockfs.sh
+  * Add a new boot option 'lockfs=default', used to reset bilibop-lockfs
+    variables to their default values, i.e. empty strings (but BILIBOP_LOCKFS
+    itself, which is then set to 'true'); modify lockfs_mount_helper and the
+    initramfs scripts accordingly.
+  * Modify lockfs_mount_helper and local-bottom initramfs script to also
+    accept boot options of the form 'lockfs=-/foobar', where /foobar is a
+    mountpoint to whitelist.
+  * Remove unneeded code about 'crypto_LUKS' filesystem types in the mount
+    helper script: the mount.crypt command (libpam-mount) already manages
+    permissions of children virtual devices (loop and dm) when the 'ro' option
+    is encountered in the fstab entry.
+  * Add new function get_device_node() in lockfs.sh: if LABEL=* is used in
+    fstab, translate '/' characters to their hex value to be sure to find the
+    symlink in /dev/disk/by-label/; modify unlock_logical_volume() and
+    is_encrypted() to call it.
+  * Add support for LVM 'global_filter' variable in lockfs.sh: modify
+    initialize_lvm_conf() and blacklist_bilibop_devices(); so 'global_filter'
+    is unconditionally set to the same value than 'filter'.
+  * Modify local-bottom initramfs script: when calling 'is_removable()', don't
+    call 'physical_hard_disk()' again, as BILIBOP_DISK has already been
+    computed.
+  * Replace all occurences of '\s' by the POSIX class '[[:blank:]]' in grep
+    commands.
+  * Update documentation (README.Debian, TODO, examples/bilibop.conf).
+
+  * bilibop-udev:
+  * Modify the udev rules file: rely on the 'removable' attribute to know that
+    a device is a disk.
+  * Replace all occurences of '\s' by the POSIX class '[[:blank:]]' in grep
+    commands.
+
+  * debian/control:
+  * Update bilibop-lockfs and bilibop-rules extended descriptions.
+  * Move aufs-tools from Recommends: to Suggests: for bilibop-lockfs.
+  * Add udisks2 as an alternative to udisks in Recommends: for bilibop-rules.
+  * Bump Standards-Version: to 3.9.5; no changes.
+
+  * Update debian/po/templates.pot and debian/po/*.po
+  * Add debian/source.lintian-overrides (newer-standards-version 3.9.5), as
+    lintian (2.5.19) is not yet updated (see #729096).
+  * Add debian/bilibop-rules.lintian-overrides (unused-debconf-template): the
+    postinst script embeds the ${HELPER} variable in template names.
+
+ -- Yann Amar <quidame@poivron.org>  Mon, 09 Dec 2013 02:58:24 +0000
+
+bilibop (0.4.19) unstable; urgency=high
+
+  * bilibop-lockfs:
+    - Modify parse_and_modify_fstab() in lockfs.sh: skip 'rbind' mounts as
+      well as 'bind' mounts.
+    - Modify lockfs_mount_helper script: set -e.
+    - Simplify lockfs_mount_helper; especially, rewrite the mount_fallback()
+      function to parse the arguments provided by the parent process (mount)
+      'as is', and do not 'exec mount', but just 'mount' instead, to be able
+      to exit with a code != 0 when mount_fallback() is called.
+    - Modify lockfs_mount_helper and the local-bottom initramfs script to
+      parse options (BILIBOP_LOCKFS_SIZE and boot commandline) and set the
+      size of the tmpfs in a better and more reliable way (use regex instead
+      of glob patterns).
+    - Add new function 'is_write_protected()' in lockfs.sh (takes into account
+      sd, mmcblk and mspblk devices) and call it from the local-bottom
+      initramfs script.
+    - Modify init-top initramfs script: in the case any drive is physically
+      locked, override BILIBOP_LOCKFS and BILIBOP_LOCKFS_POLICY.
+
+  * bilibop-rules:
+    Fix a bug in lsbilibop: since udev is now a part of systemd, 'udevadm info
+    --root' no more works to query the udev_root value; so query it directly
+    from udev.conf instead. (Closes: #727682)
+
+ -- Yann Amar <quidame@poivron.org>  Fri, 25 Oct 2013 13:46:29 +0000
+
+bilibop (0.4.18) unstable; urgency=low
+
+  * Add japanese translation for the debconf templates; thanks to
+    <victory.deb@gmail.com> (closes: #726975).
+  * debian/copyright: fix my name also here.
+
+ -- Yann Amar <quidame@poivron.org>  Wed, 23 Oct 2013 18:11:08 +0000
+
+bilibop (0.4.17) unstable; urgency=low
+
+  * bilibop-lockfs: modify local-bottom initramfs script and
+    lockfs_mount_helper to override configuration variables and even boot
+    parameters when the drive is physically locked (write protected by a
+    switch).
+  * bilibop-rules: fix typos in debconf templates; update po files.
+  * debian/control: fix my name, and remove "Uploaders:" field.
+
+ -- Yann Amar <quidame@poivron.org>  Fri, 11 Oct 2013 00:30:15 +0000
+
+bilibop (0.4.16) unstable; urgency=low
+
+  * bilibop-rules: move db_reset and db_fset commands from config to postinst
+    script; this should improve the behavior of the scripts during package
+    upgrade if a custom rules file has been built manually. Add comments.
+  * debian/substvars: remove trailing ${Newline} in the "Description"
+    variable. It had been added to work around bug #659814 (dpkg-dev),
+    which has been recently fixed.
+
+ -- bilibop project <quidame@poivron.org>  Tue, 17 Sep 2013 11:46:55 +0000
+
+bilibop (0.4.15) unstable; urgency=low
+
+  * bilibop-rules: modify bilibop-rules.bilibop.udev to avoid direct access
+    (with blkid -p) to suspended dm devices; then create the symlink (as
+    mapper/dm_name) earlier; update bilibop_rules_generator for consistency.
+
+ -- bilibop project <quidame@poivron.org>  Fri, 09 Aug 2013 20:19:40 +0200
+
+bilibop (0.4.14) unstable; urgency=low
+
+  * bilibop-common: fix spelling errors in manpages.
+  * bilibop-rules:
+    - Modify postrm script: fix an error about udev tags directory path.
+    - Include missing 'rlvm' sample script in the package.
+    - Modify 'rlvm' sample (rely on $SHELL environment variable).
+
+ -- bilibop project <quidame@poivron.org>  Sat, 20 Jul 2013 00:28:48 +0200
+
+bilibop (0.4.13) unstable; urgency=low
+
+  * bilibop-common: update bilibop.conf(5) manual pages.
+
+  * bilibop-rules:
+    - Modify maintainer scripts: fix syntax errors; keep variable names
+      consistency between scripts; backup GRUB device.map in postinst, and
+      restore it in postrm (purge); do not create a fake device.map in prerm,
+      just a broken symlink.
+    - Add a sample script (in the doc) to ease the use of the
+      physical_volumes_filter helper script.
+    - Update README.Debian
+    - Remove the TODO
+
+ -- bilibop project <quidame@poivron.org>  Thu, 04 Jul 2013 15:17:21 +0200
+
+bilibop (0.4.12) experimental; urgency=low
+
+  * bilibop-common:
+    - Modify 'underlying_device_from_aufs()'; take into account that an aufs
+      branch is not necessarly the mountpoint of a device.
+    - Update the copyright date of the shell library (common.sh).
+    - Update main function's dependency tree in common.sh
+    - Fix a typo in the french bilibop.conf manpage.
+    - Update README.Debian
+
+  * bilibop-lockfs:
+    - In the local-bottom initramfs script, follow
+      BILIBOP_LOCKFS_NOTIFY_POLICY to display non-error messages in plymouth.
+    - debian/control: add plymouth in the 'Suggests:' field.
+
+  * bilibop-rules:
+    - Modify bilibop_rules_generator to ease the build of rules that can be
+      applied to dual port devices (especially USB and MMC/MSP/SD).
+    - Modify sysfs_attrs_rule() in bilibop_rules_generator: replace occurences
+      of double quotes (") by a question mark (?) in values of attributes (as
+      " means inch) instead of removing these attributes.
+    - Modify make_unpersistent_rules and the initramfs script to fix a design
+      error in the 'unpersistent rules' feature. This mainly affected the cd
+      rules (symlinks to /dev/sr* were not always created or updated).
+    - Make the package debconf-configurable: rewrite existing maintscripts;
+      add bilibop-rules.config and bilibop-rules.templates; add debian/po/
+      and populate it; modify debian/control and debian/rules.
+    - Add french translation for debconf.
+    - Update README.Debian
+
+  * bilibop-udev:
+    - Modify postinst script: if the disk hosting the system (or one of its
+      partitions) still belong to 'floppy' group, then exit with error, unless
+      a custom rules file exists.
+    - modify postrm script: be sure /sys/block exists before doing things; use
+      ERE instead of BRE in grep commands.
+    - Update README.Debian
+
+  * debian/control: update Homepage: and Vcs-Git: fields.
+  * debian/copyright: remove the 'Source: ' field and update copyright dates.
+  * debian/substvars: replace the strict requirement by something more soft,
+    as an advice.
+
+ -- bilibop project <quidame@poivron.org>  Wed, 03 Jul 2013 20:58:40 +0200
+
+bilibop (0.4.11) experimental; urgency=low
+
+  * bilibop-common: modify /lib/bilibop/test to output the value of
+    BILIBOP_COMMON_BASENAME, unless the -q option is used.
+  * bilibop-udev:
+    - Modify the udev rules file to create a symlink with the output of
+      /lib/bilibop/test.
+    - Rewrite postinst script to not fail when the package is installed in a
+      chrooted or debootstraped environment, and explicitly load the udev
+      rules before triggering uevents.
+  * bilibop-rules: fix an error (typo) about -x option in the
+    physical_volumes_filter script.
+
+ -- bilibop project <quidame@poivron.org>  Mon, 13 May 2013 01:21:57 +0200
+
+bilibop (0.4.10) experimental; urgency=low
+
+  * debian/compat: bump to compatibility level 9.
+  * debian/control: down libnotify-bin from Recommends: to Suggests: for the
+    bilibop-lockfs binary package.
+
+  * bilibop-common: modify is_aufs_mountpoint() and physical_hard_disk(): set
+    some local variables to an empty string to fix shell-dependant behaviours
+    with the 'local' built-in command.
+
+  * bilibop-rules:
+    - Modify helper scripts in /usr/share/bilibop: set -e; reformat syntax
+      (spaces, neawlines, indents); fix minor errors and cosmetics.
+    - make_unpersistent_rules: replace the --skip option by the more explicit
+      --only; remove the confusing --reverse option; allow to always handle
+      the two files in the same command line.
+    - bilibop_rules_generator: fix printf errors and output redirection, and
+      manage minor failures to not abort immediately.
+    - grub_device_map_manager: add link_device_map() function; do not
+      automatically and stupidly remove the existing devive map when the
+      --link option is used; fix typos.
+    - lsbilibop: add -l option to not rely on BILIBOP udev tags; query the
+      ID_DRIVE_DETACHABE value.
+    - Update documentation.
+
+  * bilibop-udev: add a new udev rule (to create a 'bootdisk' symlink).
+
+ -- bilibop project <quidame@poivron.org>  Sat, 04 May 2013 01:57:21 +0200
+
+bilibop (0.4.9) experimental; urgency=low
+
+  * bilibop-rules: modify debian/bilibop-rules.bilibop-udev and
+    bilibop_rules_generator to unconditionally set UDISKS_SYSTEM_INTERNAL to 1
+    for the main drive.
+  * bilibop-lockfs: add 'activate_bilibop_lv()' in lockfs.sh functions, and
+    call it from bilibop-lockfs local-bottom initramfs script. This is needed
+    to be sure all Logical Volumes needed by the system (listed in /etc/fstab
+    and/or /etc/crypttab) are active at this step.
+  * Fix typos: replace all occurences of \' by \(aq in manual pages.
+
+ -- bilibop project <quidame@poivron.org>  Sun, 31 Mar 2013 18:47:41 +0200
+
+bilibop (0.4.8) experimental; urgency=low
+
+  * bilibop-udev: rewrite postinst script.
+
+ -- bilibop project <quidame@poivron.org>  Mon, 25 Mar 2013 06:41:23 +0100
+
+bilibop (0.4.7) experimental; urgency=low
+
+  * bilibop-udev: fix a bux in the udev rules (a matching rule as
+    KERNEL=="$result*" is not supported by udev).
+  * bilibop-common: add /lib/bilibop/test (to be used by new bilibop-udev udev
+    rule); as the 'proof of concept' /lib/bilibop/disk is no more needed by
+    bilibop-udev, modify it to output the full path of the disk.
+  * debian/control: move versioned dependency on initscripts from bilibop-common
+    to bilibop-lockfs and bilibop-rules.
+  * Remove debian/source.lintian-overrides (current version of the Debian policy
+    is now 3.9.4).
+
+ -- bilibop project <quidame@poivron.org>  Mon, 25 Mar 2013 04:59:17 +0100
+
+bilibop (0.4.6) experimental; urgency=low
+
+  * bilibop-lockfs:
+    - Add support for plymouth: send a message from local-bottom initramfs
+      script when bilibop-lockfs is enabled, disabled or has failed.
+    - Allow to override/blank BILIBOP_LOCKFS_WHITELIST with 'lockfs=all'
+      boot parameter.
+    - Update documentation.
+
+  * bilibop-rules:
+    - Add a new helper script: physical_volumes_filter, and its shell
+      functions: pvfilter.sh; the script is used to modify the variables
+      'obtain_device_list_from_udev' and 'filter' in lvm.conf.
+    - Rewrite udev rules and bilibop_rules_generator to tag internal drives
+      and partitions, and restore some dm-* related symlinks in the udev
+      database (needed by the new script).
+    - Update documentation.
+
+  * debian/control: update bilibop-rules extended description.
+  * Rewrite maintainer scripts.
+
+ -- bilibop project <quidame@poivron.org>  Thu, 20 Dec 2012 12:45:39 +0100
+
+bilibop (0.4.5) experimental; urgency=low
+
+  * bilibop-lockfs: modify bilibop-lockfs initramfs scripts, lockfs.sh and
+    lockfs_mount_helper:
+    - 'noswap' boot parameter overrides BILIBOP_LOCKFS_SWAP_POLICY and set
+      it to "hard".
+    - parse /proc/cmdline in a more portable and robust way: take into account
+      that the last runlevel (0 to 6, S and single) overrides all the previous
+      ones; allow the general format 'lockfs[=opt1[,opt2[,opt3]]]' with
+      options 'hard', 'soft', 'force' and an arbitrary string matching a regex
+      for the size of the tmpfs used for /.
+  * Update bilibop-lockfs documentation (README.Debian).
+  * Update bilibop.conf(5) manual page for bilibop-lockfs related variables
+    that can be overridden from boot commandline.
+
+ -- bilibop project <quidame@poivron.org>  Wed, 28 Nov 2012 03:37:16 +0100
+
+bilibop (0.4.4) experimental; urgency=low
+
+  * Fix inconsistent variable name in the lockfs_mount_helper script.
+  * Modify lockfs_mount_helper script: allow devices with 'crypto'
+    ID_FS_USAGE (instead of only 'filesystem') to be listed in the
+    BILIBOP_LOCKFS_WHITELIST variable.
+  * Update bilibop.conf(5) manual pages (en & fr), and fix a translation
+    error in the french version.
+
+ -- bilibop project <quidame@poivron.org>  Tue, 27 Nov 2012 01:40:01 +0100
+
+bilibop (0.4.3) experimental; urgency=low
+
+  * bilibop-common:
+    - Add lib/bilibop/disk (outputs the name of the disk hosting the root
+      filesystem, or hosting a file, device or directory given as argument);
+    - Update documentation (README.Debian and bugs.txt).
+  * bilibop-lockfs:
+    - Fix error due to invalid lvm.conf settings (read_only_volume_list should
+      not be set if empty): modify 'bilibop-lockfs' initramfs scripts, and
+      the functions 'parse_and_modify_fstab()', 'initialize_lvm_conf()',
+      'blacklist_bilibop_devices()', 'set_readonly_lvm_settings()' and
+      'unlock_logical_volume()'.
+    - Improve support for loop devices (take into account that the first field
+      in fstab can be a regular file instead of a block device): modify
+      lockfs_mount_helper script and 'parse_and_modify_fstab()' function in
+      lockfs.sh.
+  * bilibop-udev: modify udev rules file (now based on lib/bilibop/disk; runs
+    faster). Add postinst and postrm maintscripts to trigger spurious uevents.
+    Update README.Debian.
+
+  * debian/control: change Section of bilibop binary package (from misc to
+    metapackages); change Depends of the same package (replace dependency on
+    bilibop-device-policy virtual package by a versioned dependency on
+    bilibop-rules).
+
+ -- bilibop project <quidame@poivron.org>  Tue, 20 Nov 2012 15:22:57 +0100
+
+bilibop (0.4.2) experimental; urgency=low
+
+  * Update debian/bilibop-lockfs.dirs
+  * Update debian/bilibop-lockfs.install
+  * Add missing call to 'get_udev_root' in the bilibop_disk (bilibop-udev)
+    script.
+
+ -- bilibop project <quidame@poivron.org>  Fri, 16 Nov 2012 03:14:23 +0100
+
+bilibop (0.4.1) experimental; urgency=low
+
+  * Modify lockfs.sh:
+    - add new functions: 'set_readonly_lvm_settings()', to modify
+      'locking_type', 'metadata_read_only' and 'read_only_volume_list'; and
+      'unlock_logical_volume()', to not lock (set read-only) whitelisted
+      Logical Volumes.
+    - rewrite 'initialize_lvm_conf()' to also initialize 'locking_type',
+      'metadata_read_only' and 'read_only_volume_list' LVM variables.
+    - rewrite 'blacklist_bilibop_devices()'.
+    - modify 'parse_and_modify_fstab()' to use 'unlock_logical_volumes()'.
+  * bilibop-lockfs:
+    - modify local-bottom initramfs script (call 'set_readonly_lvm_settings()'
+      when lockfs policy is 'hard').
+    - modify initramfs hook to include a list of Logical Volumes in the
+      initramdisk; this list is used by 'set_readonly_lvm_settings()'.
+    - new init-top initramfs script, to call 'set_readonly_lvm_settings()'
+      very early in the boot process, unless the 'nolockfs' parameter is used
+      in the boot commandline.
+  * Update documentation (debian/bilibop-lockfs.README.Debian).
+  * Modify lockfs-notify script: replace 'permanent' by 'persistent' and
+    'temporary' by 'volatile'.
+
+  * Modify bilibop.conf(5) manual pages: use the '.SS' tag, and replace \' by
+    \(aq.
+
+  * debian/control: update bilibop-lockfs description; since bilibop depends
+    on bilibop-device-policy, remove 'all' from 'install all other BILIBOP
+    packages'. For bilibop-udev, replace versioned suggestion on
+    bilibop-lockfs by unversioned one.
+
+ -- bilibop project <quidame@poivron.org>  Fri, 16 Nov 2012 00:46:57 +0100
+
+bilibop (0.4.0) experimental; urgency=low
+
+  * Add new binary package: bilibop-udev, as a minimal subset of
+    bilibop-rules. There is a conflict between bilibop-udev and bilibop-rules,
+    and each of them provides the 'bilibop-device-policy' virtual package.
+  * bilibop-lockfs: the mount_fallback() function being the only one in
+    lockfs.sh that can be used by the lockfs_mount_helper script, move it from
+    lockfs.sh to lockfs_mount_helper, and source common.sh directly instead of
+    lockfs.sh from lockfs_mount_helper.
+  * bilibop-common: update documentation:
+    - add a reference to bilibop-udev in misc/udev.txt
+    - update misc/bugs.txt (new bug reported against udisks)
+    - give additional information about encrypted swap devices (misc/swap.txt)
+    - add a NOTE about hibernation, and explain how to hide the 'hibernate'
+      button of xfce4-session-logout (misc/swap.txt)
+    - give more info about the LVM 'filter' settings and how to use it from OS
+      on external media (misc/lvm2.txt)
+    - give detailed info on how to build and use non-default keymap in GRUB
+      (misc/grub2.txt)
+
+  * debian/changelog: fix a debchangelog syntax error in the Initial Release
+    entry (add the missing colon after 'Closes').
+  * debian/control: update dependency relationships and description of the
+    binary packages:
+    - bilibop: modify the Depends: field; now bilibop depends on the virtual
+      package 'bilibop-device-policy' instead of 'bilibop-rules (= version)'.
+    - bilibop-common: modify the Suggests: field; now suggests the virtual
+      package 'bilibop-device-policy' as above and remove (= version) for
+      bilibop-lockfs.
+    - bilibop-lockfs: modify the Recommends: and Suggests: fields in the same
+      manner. Move 'aufs-tools' and 'libnotify-bin' from Suggests: to
+      Recommends: field. Add some details in the long description.
+    - bilibop-rules: add 'grub-common' and 'lvm2' in Recommends: and move
+      'udisks' from Suggests: to Recommends: field. Update short description.
+      Add some details in the long description.
+  * Update debian/bilibop-rules.dirs (remove unneeded initramfs-tools/hooks
+    directory).
+
+ -- bilibop project <quidame@poivron.org>  Mon, 22 Oct 2012 00:20:33 +0200
+
+bilibop (0.3.6) experimental; urgency=low
+
+  * bilibop-common: modify common.sh for portability:
+    - device_node_from_major_minor(): replace local path= by dev= (path is
+      an environment variable of zsh, as PATH, but with spaces as separators
+      instead of colons).
+    - underlying_device_from_aufs(): escape equal sign (\=) in a variable
+      subtitution (for compatibility with zsh again).
+  * bilibop-common: modify common.sh to be sure DEBUG is 'true' or 'false'.
+  * bilibop-common: modify physical_hard_disk(). Base the loop on /sys/block/*
+    instead of the content of /proc/partitions. Runs a little bit faster.
+  * bilibop-common: Add support for aufs module parameter 'brs=0'; add
+    aufs_dirs_if_brs0() function, and modify aufs_readonly_branch(),
+    aufs_writable_branch() and aufs_dirs() to use the new one.
+  * bilibop-common: modify _drivemap_volume_size() to use 10 instead of 8 as a
+    limit to display sizes in MB).
+  * bilibop-common: add FSF address in the licence header of common.sh
+
+  * bilibop-lockfs: use device_nodes() in blacklist_bilibop_devices().
+  * bilibop-rules: fix typo in lsbilibop(8) french manual page.
+
+  * Update documentation for bilibop-common (README.Debian, bugs.txt and
+    lvm2.txt), bilibop-lockfs (README.Debian) and bilibop-rules
+    (README.Debian).
+
+  * debian/control: replace debhelper (>= 9.0.0) by debhelper (>= 9) in the
+    Build-Depends: field. Add "GNU/Linux" in the short description of the
+    bilibop metapackage.
+  * debian/substvars: replace 'Debian' by 'Debian GNU/Linux'; add 'eSATA' in
+    the list of external media.
+
+ -- bilibop project <quidame@poivron.org>  Tue, 16 Oct 2012 15:58:14 +0200
+
+bilibop (0.3.5) experimental; urgency=low
+
+  * Fix typos in manpages and add french translations of the manpages.
+
+  * bilibop-rules:
+    Remove loopback udev rules file and modify bilibop rules file and
+    bilibop_rules_generator to not depend on the BACKING_FILE variable.
+
+  * bilibop-rules:
+    Rewrite lsbilibop to allow to trigger uevents in a per-action and
+    per-device basis: split -u option (update) to -a (action=add) and -c
+    (action=change) options.
+    Add a short help message in the case BILIBOP udev tag does not exist.
+    Add the DEVLINKS udev property in the info (-i option) output.
+    Relative paths, symlinks and wildcards are now supported in the
+    commandline.
+
+  * bilibop-rules:
+    Modify lsbilibop manpage to be consistent with the new lsbilibop script.
+
+  * bilibop-lockfs:
+    Be less restrictive in blacklist_bilibop_devices() when building the
+    'reject' patterns for lvm.conf filter array: only apply on bilibop
+    Physical Volumes and their symlinks instead of all bilibop block
+    devices and parent directories of their symlinks.
+    Modify and rename overwrite_lvm_conf() to initialize_lvm_conf().
+    Add BILIBOP_PART variable in the initramfs script.
+
+  * bilibop-common:
+    Fix drivemap output errors: remove annoying trailing spaces, fix width
+    issues that occured with the -p option.
+    Define the PROG variable and replace all occurencies of ${0##*/} by ${PROG}
+    Fix a missing redirection to stderr when --debug is invoked.
+
+  * bilibop-common:
+    add device_nodes() function, which is used now in physical_hard_disk() and
+    in lsbilibop script. Fix indentations (expand tabs) in common.sh.
+
+  * bilibop-common:
+    Add Copyright and Licence as header of lib/bilibop/common.sh, which can be
+    used standalone.
+
+  * debian/control: fix typo in bilibop-common description.
+  * Remove unneeded executable bit of maintainer scripts and file intended to
+    be installed in /bin and /usr/bin.
+  * Add debian/source.lintian-overrides to override lintian warning message
+    W: bilibop source: newer-standards-version 3.9.4 (current is 3.9.3)
+
+ -- bilibop project <quidame@poivron.org>  Tue, 09 Oct 2012 00:06:50 +0200
+
+bilibop (0.3.4) experimental; urgency=low
+
+  * debian/control: bump Standards-Version to 3.9.4; add dependency on
+    initscripts (>= 2.88dfs-13.3) for bilibop-common. Replace versioned
+    dependencies on udev and initramfs-tools by unversioned dependencies;
+    remove versioned dependency on base-files. Replace Vcs-Browser: field
+    by Vcs-Git: field.
+  * lib/bilibop/common.sh: add a test in physical_hard_disk() to avoid
+    possible failures with some partition schemes. Allow
+    parent_device_from_dm() to accept a device basename or its absolute path
+    as argument.
+  * lib/bilibop/lockfs.sh: allow is_encrypted() to treat devices called by
+    their UUID or LABEL as well as their filename.
+
+ -- bilibop project <quidame@poivron.org>  Sun, 23 Sep 2012 22:58:27 +0200
+
+bilibop (0.3.3) unstable; urgency=low
+
+  * debian/control: add Vcs-Browser: field.
+
+ -- bilibop project <quidame@poivron.org>  Tue, 03 Jul 2012 02:59:38 +0200
+
+bilibop (0.3.2) unstable; urgency=low
+
+  * debian/control: fix indentation errors in bilibop-lockfs description.
+  * bilibop-rules:
+    - postinst: fix an error in the 'udev trigger --sysname-match' argument.
+    - postrm: trigger uevents for block devices owned by the 'disk' group.
+    - prerm: remove custom 66-bilibop.rules when package is purged.
+
+ -- bilibop project <quidame@poivron.org>  Thu, 21 Jun 2012 00:16:26 +0200
+
+bilibop (0.3.1) unstable; urgency=low
+
+  * debian/control: in the Suggests: field of bilibop-rules, replace the too
+    specific 'grub2' by a list of alternatives (grub-coreboot, grub-efi-amd64,
+    grub-efi-ia32, grub-ieee1275 and grub-pc).
+
+  * Add a TODO in bilibop-common, bilibop-rules and bilibop-lockfs.
+  * Include /etc/bilibop/bilibop.conf in the bilibop-common binary package.
+  * Modify scripts and documentation to take into account that there can be
+    more than height loopback devices.
+
+  * bilibop-rules:
+    - Fix errors on tests in the initramfs script.
+    - Modify grub_device_map_manager to exit with code 0.
+  * bilibop-rules.postinst: trigger uevents for block devices.
+  * bilibop-rules.bilibop.udev and bilibop_rules_generator: import ID_FS_*
+    properties of dm devices in udev database even if udisks is not installed.
+  * bilibop_rules_generator: include a new rule for the case the generated
+    custom rules file is orphaned.
+
+ -- bilibop project <quidame@poivron.org>  Wed, 20 Jun 2012 01:47:55 +0200
+
+bilibop (0.3.0) unstable; urgency=low
+
+  * debian/control:
+    - Update Build-depends from debhelper (>= 8.0.0) to debhelper (>= 9.0.0).
+    - Change some dependencies of binary packages to versioned dependencies:
+      udev (>= 167), initramfs-tools (>= 0.99). As for base-files (>= 6.4),
+      this is needed by the use of the /run temporary directory in bilibop
+      functions or scripts.
+
+  * bilibop-lockfs: modify the initramfs hook: busybox providing its own
+    blockdev builtin, don't add /sbin/blockdev in the initramfs if busybox is
+    added.
+  * extended_partition(): rewrite to avoid direct access on devices (now
+    based on udev instead of blkid), move it from lockfs.sh to common.sh
+  * lockdev_rootdev_tree():
+    - Rewrite it to avoid direct access on devices.
+    - Rename it blockdev_root_subtree().
+  * lockfs_mount_helper:
+    - When the fstype registered in /etc/fstab is 'crypt', 'crypt_LUKS' or
+      'crypto_LUKS', set the mounted mapped device as readonly too (and not
+      only the underlying device) if asked by BILIBOP_LOCKFS_POLICY != soft.
+    - Use LC_ALL=C before the verbose chmod and chown to not depend on the
+      locale and simplify the regexp in sed.
+  * Put the loop used in the initramfs script to parse and modify fstab in the
+    parse_and_modify_fstab() function in lockfs.sh, and call this function in
+    the initramfs script.
+  * Because LVM tools can bypass 'readonly' settings of block devices and
+    reset them as writable, add new functions in lockfs.sh:
+    - blacklist_bilibop_devices(): called from the initramfs script.
+    - overwrite_lvm_conf(): called from the previous one.
+    They are used to disallow management of bilibop (physical and virtual)
+    devices by the lvm commands by filtering them in the temporary lvm.conf.
+    This avoids breakage of bilibop-lockfs 'hard' policy, at least for the
+    root filesystem and its parent devices.
+  * Add a new part (3.1.g) in README.Debian to explain what is done, and why.
+
+  * bilibop-common: add a reference to
+    http://wiki.debian.org/AdvancedStartupShutdownWithMultilayeredBlockDevices
+    in the documentation.
+  * Add misc/bugs.txt and misc/lvm2.txt in the documentation.
+  * common.sh: remove unneeded command substitution (echo) in the
+    undelying_device_from_loop() function.
+  * New available options in usr/bin/drivemap:
+    - Split --debug to --debug and -x or --set-x
+    - Add -p or --mountpoint to explicitly ask to display mountpoints.
+    - Add -w or --width to control the width of the output.
+  * drivemap.sh: modify _dotline() and _print_line() to include new options.
+  * drivemap.1: add the new options in the manpage.
+  * _drivemap_primary_partitions(): rewrite to use extended_partition().
+
+  * Fix some typos, unclear sentences and language errors in debian/control,
+    in the documentation and in the comments of scripts and functions.
+
+ -- bilibop project <quidame@poivron.org>  Sat, 16 Jun 2012 01:53:41 +0200
+
+bilibop (0.2) unstable; urgency=low
+
+  * New OpenPGP key.
+  * debian/control: change 'Achitecture: all' to 'Architecture: linux-any' for
+    all binaries.
+  * debian/control: more precise description of the packages, their purposes
+    and features. Add a statement about the required kernel version.
+  * debian/copyright: modify Format field to:
+    http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/ (Fixes
+    lintian pedantic message).
+  * debian/copyright: change copyright date from 2012 to 2011-2012 for all
+    files except debian/*.
+  * Clean debian/rules.
+  * Add debian/substvars.
+  * bilibop-common: modify functions relative to loop devices and aufs to
+    improve compatibility with LiveUSB systems.
+  * bilibop-lockfs: set the primary extended partition as readonly when the
+    root filesystem is contained into a logical partition that has been set
+    readonly.
+  * bilibop-rules: rewrite initramfs-tools script to not depend on
+    bilibop-common functions.
+  * Rewrite unclear or ambiguous parts of the documentation, and fix typos.
+  * Remove unneeded files from the source.
+
+ -- bilibop project <quidame@poivron.org>  Fri, 08 Jun 2012 01:48:59 +0200
+
+bilibop (0.1) unstable; urgency=low
+
+  * Initial Release (Closes: #675467).
+
+ -- bilibop project <quidame@poivron.org>  Fri, 01 Jun 2012 00:06:51 +0200

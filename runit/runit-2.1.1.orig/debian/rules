@@ -1,0 +1,124 @@
+#!/usr/bin/make -f
+
+VERSION =$(shell head -n1 debian/changelog |sed -e 's/.*(\(.*\)-.*).*/\1/')
+
+CFLAGS =-Wall
+LDFLAGS =-pipe
+CC =diet -v -Os gcc
+STRIP =strip
+
+DIET_ARCHS =alpha amd64 arm hppa i386 ia64 mips mipsel powerpc ppc64 s390 sparc
+ARCH ?=$(shell dpkg-architecture -qDEB_HOST_ARCH)
+ifeq (,$(findstring $(ARCH),$(DIET_ARCHS)))
+  CC =gcc
+  CFLAGS =-O2 -Wall
+endif
+
+# readdir64, getdents64 seems to be broken in dietlibc on sparc
+ifeq (,$(findstring sparc,$(ARCH)))
+  CFLAGS +=-D_FILE_OFFSET_BITS=64
+endif
+
+ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
+  CFLAGS +=-g
+endif
+ifneq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
+  STRIP =: nostrip
+endif
+
+DIR =$(shell pwd)/debian/runit
+
+patch: deb-checkdir patch-stamp
+patch-stamp:
+	for i in `ls -1 debian/diff/*.diff || :`; do \
+	  patch -p1 <$$i || exit 1; \
+	done
+	touch patch-stamp
+
+build: deb-checkdir build-stamp
+build-stamp: patch-stamp
+	-gcc -v
+	test -e runit || ln -s runit-'$(VERSION)' runit
+	test -r conf-cc'{orig}' || cp -f runit/src/conf-cc conf-cc'{orig}'
+	echo '$(CC) $(CFLAGS)' >runit/src/conf-cc
+	test -r conf-ld'{orig}' || cp -f runit/src/conf-ld conf-ld'{orig}'
+	echo '$(CC) $(LDFLAGS)' >runit/src/conf-ld
+	(cd runit/ && package/compile && package/check)
+	touch build-stamp
+
+clean: deb-checkdir deb-checkuid
+	rm -rf runit/compile runit/command
+	test ! -e patch-stamp || \
+	  for i in `ls -1r debian/diff/*.diff || :`; do patch -p1 -R <$$i; done
+	rm -f patch-stamp build-stamp
+	rm -rf '$(DIR)'
+	rm -f debian/files debian/substvars changelog
+	test ! -r conf-cc'{orig}' || mv -f conf-cc'{orig}' runit/src/conf-cc
+	test ! -r conf-ld'{orig}' || mv -f conf-ld'{orig}' runit/src/conf-ld
+	rm -f runit
+
+install: deb-checkdir deb-checkuid build-stamp
+	rm -rf '$(DIR)'
+	install -d -m0755 '$(DIR)'/etc/service
+	install -d -m0755 '$(DIR)'/var/lib/supervise
+	install -d -m0755 '$(DIR)'/sbin
+	install -d -m0755 '$(DIR)'/usr/bin
+	install -d -m0755 '$(DIR)'/usr/sbin
+	for i in runit runit-init; do \
+	  install -m0755 runit/command/$$i '$(DIR)'/sbin/ || exit 1; \
+	done
+	for i in runsvdir runsv sv svlogd chpst; do \
+	  install -m0755 runit/command/$$i '$(DIR)'/usr/bin/ || exit 1; \
+	done
+	for i in runsvchdir utmpset; do \
+	  install -m0755 runit/command/$$i '$(DIR)'/usr/sbin/ || exit 1; \
+	done
+	$(STRIP) -R .comment -R .note '$(DIR)'/sbin/* '$(DIR)'/usr/sbin/* \
+	  '$(DIR)'/usr/bin/*
+	# runsvdir-start to be used from /etc/inittab
+	install -m0755 debian/2 '$(DIR)'/usr/sbin/runsvdir-start
+	# update-service
+	install -m0755 debian/update-service '$(DIR)'/usr/sbin/update-service
+	# getty-5 service
+	install -d -m0755 '$(DIR)'/etc/sv/getty-5
+	install -m0755 debian/getty-tty5.run '$(DIR)'/etc/sv/getty-5/run
+	install -m0755 debian/getty-tty5.finish \
+	  '$(DIR)'/etc/sv/getty-5/finish
+	# lintian overrides
+	install -m0755 -d '$(DIR)'/usr/share/lintian/overrides
+	install -m0644 debian/runit.lintian \
+	  '$(DIR)'/usr/share/lintian/overrides/runit
+	# man pages
+	install -d -m0755 '$(DIR)'/usr/share/man/man8
+	for i in runit runit-init runsvdir runsv sv svlogd chpst runsvchdir \
+	 utmpset; do \
+	  install -m0644 runit/man/$$i.8 \
+	    '$(DIR)'/usr/share/man/man8/ || exit 1; \
+	done
+	install -m0644 debian/runsvdir-start.8 '$(DIR)'/usr/share/man/man8/
+	install -m0644 debian/update-service.8 '$(DIR)'/usr/share/man/man8/
+	gzip -9 '$(DIR)'/usr/share/man/man8/*.8
+	# links
+	ln -s /var/run/sv.getty-5 '$(DIR)'/etc/sv/getty-5/supervise
+	# additional docs
+	install -d -m0755 '$(DIR)'/usr/share/doc/runit/debian
+	for i in 1 2 3 ctrlaltdel; do \
+	  install -m0644 runit/etc/debian/$$i \
+	    '$(DIR)'/usr/share/doc/runit/debian/ || exit 1; \
+	done
+	# changelog
+	rm -f changelog && ln -s runit/package/CHANGES changelog
+
+binary-indep:
+
+binary-arch: install runit.deb
+	test '$(CC)' != 'gcc' || \
+	  dpkg-shlibdeps '$(DIR)'/usr/sbin/* '$(DIR)'/usr/bin/*
+	dpkg-gencontrol -isp -prunit -P'$(DIR)'
+	dpkg -b '$(DIR)' ..
+
+binary: binary-indep binary-arch
+
+.PHONY: patch build clean install binary-indep binary-arch binary
+
+include debian/implicit

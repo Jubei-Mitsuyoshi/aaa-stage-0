@@ -1,0 +1,5 @@
+# It doesn't make sense to have a status option for fsprotect as this is
+# activated per filesystem. It could make sense to make the status option
+# report whether fsprotect is enabled or disabled at boot time but it
+# would provide different semantics for the 'status' command
+fsprotect: init.d-script-does-not-implement-optional-option

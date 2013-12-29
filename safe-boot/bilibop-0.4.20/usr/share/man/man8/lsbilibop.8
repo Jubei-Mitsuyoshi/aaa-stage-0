@@ -1,0 +1,190 @@
+.TH LSBILIBOP 8 2013\-11\-24 bilibop "System Administration"
+
+.SH NAME
+lsbilibop \- list BILIBOP tagged devices, display or update some of their udev properties
+
+.SH SYNOPSIS
+.B lsbilibop
+.RB [ \-l ]
+.br
+.B lsbilibop
+.RB [ \-a | \-c | \-i ]
+.RI [ DEVICE
+.RI [ DEVICE
+.RI [ ... ]]]
+.br
+.B lsbilibop \-h
+
+.SH DESCRIPTION
+.B lsbilibop
+is a simple shell script that ouputs the list of
+.I BILIBOP
+tagged block devices and some of their
+.BR udev (7)
+properties, or triggers uevents to update udev rules and properties that
+can be applied to these devices.
+.P
+If the operating system is running from an external and writable support
+(USB or SD Flash Memory, USB, Firewire or eSATA HDD), then the
+.I BILIBOP
+tagged devices are the block devices whose contents are on the same
+physical disk than the root filesystem. This includes
+.BR disk ,
+.BR partitions ,
+but also
+.B device\-mapper
+and
+.B loopback
+devices, and even block devices containing a filesystem used as
+lower/readonly branch of an
+.BR aufs (5)
+mountpoint. The rules file
+.I /lib/udev/rules.d/66\-bilibop.rules
+(or
+.IR /etc/udev/rules.d/66\-bilibop.rules )
+is used to find and tag such devices.
+
+.SH OPTIONS
+Options must be invoked before arguments.
+When invoked without option,
+.B lsbilibop
+just outputs a list of the device(s) given as arguments
+(if they are
+.I BILIBOP
+tagged block devices), or of all
+.I BILIBOP
+tagged block devices if none is specified. Devices are listed in the same
+order than in
+.IR /proc/partitions ,
+i.e. in the order they have been discovered by the kernel. Absolute or
+relative paths and symlinks can be used to specify a device. Shell
+wildcards are allowed.
+.TP 4
+.B \-a
+Trigger \(aqdevice
+.BR add \(aq
+uevent for the device(s) given as arguments (if they are
+.I BILIBOP
+tagged block devices), or of all BILIBOP tagged block devices if none is
+specified, to update their properties. This can be used each time the
+corresponding BILIBOP_RULES_* variables are modified in
+.BR bilibop.conf (5),
+to apply the new settings without need to reboot the operating system.
+.TP
+.B \-c
+Trigger \(aqdevice
+.BR change\(aq
+uevent for the device(s) given as arguments (if they are
+.I BILIBOP
+tagged block devices), or of all BILIBOP tagged block devices if none is
+specified, to update their properties. This can be used each time the
+corresponding BILIBOP_RULES_* variables are modified in
+.BR bilibop.conf (5),
+to apply the new settings without need to reboot the operating system.
+.TP
+.B \-h
+Print a help page on standard output and exit.
+.TP
+.B \-i
+Display some useful
+.BR udev (7)
+properties of the device(s) given as arguments (if they are
+.I BILIBOP
+tagged block devices), or of all
+.I BILIBOP
+tagged block devices if none is specified.
+This option overrides \-a and \-c options.
+.IP
+The following properties are only informative. The two last ones are set
+if and only if
+.B udisks 1.x
+(ID_DRIVE_DETACHABLE) and/or
+.B udisks 2.x
+(UDISKS_CAN_POWER_OFF) are installed.
+.IP
+DEVNAME
+.br
+BILIBOP_DISK
+.br
+BILIBOP_PARTITION
+.br
+BILIBOP_UNDERLYING_PARTITION
+.br
+DEVLINKS
+.IP
+ID_DRIVE_DETACHABLE
+.br
+UDISKS_CAN_POWER_OFF
+.IP
+The following properties can be used to set BILIBOP_RULES_*_WHITELIST and
+other variables in
+.BR bilibop.conf (5):
+.IP
+ID_FS_LABEL
+.br
+ID_FS_TYPE
+.br
+ID_FS_USAGE
+.br
+ID_FS_UUID
+.IP
+The following properties can be modified by changing the corresponding
+BILIBOP_RULES_* variables in
+.BR bilibop.conf (5).
+They are set if and only if
+.B udisks 1.x
+(for the first set) and/or
+.B udisks 2.x
+(for the second set) are installed.
+.IP
+UDISKS_PRESENTATION_HIDE
+.br
+UDISKS_PRESENTATION_ICON_NAME
+.br
+UDISKS_PRESENTATION_NAME
+.br
+UDISKS_SYSTEM_INTERNAL
+.IP
+UDISKS_IGNORE
+.br
+UDISKS_ICON_NAME
+.br
+UDISKS_NAME
+.br
+UDISKS_SYSTEM
+.TP
+.B \-l
+Dont't rely on the \(aqBILIBOP\(aq tag to list the devices.
+This option is based on the
+.I bilibop\-common
+shell library.
+
+.SH ERRORS
+If the \(aqBILIBOP\(aq tag does not exist in the udev database, then
+.B lsbilibop
+displays a useful error message on stderr, and lists the device nodes whose
+content is supposed to be written on the same physical disk than the root
+filesystem (as does the \-l option). Exit code is 8.
+
+.SH FILES
+/etc/bilibop/bilibop.conf
+.br
+/usr/share/doc/bilibop\-rules/examples/bilibop.conf
+.br
+/usr/share/bilibop/bilibop_rules_generator
+.br
+/lib/udev/rules.d/66\-bilibop.rules
+.br
+/etc/udev/rules.d/66\-bilibop.rules
+
+.SH SEE ALSO
+.BR bilibop (7),
+.BR bilibop.conf (5),
+.BR drivemap (1),
+.BR udev (7),
+.BR udevadm (8),
+.BR udisks (7),
+.BR udisks (8)
+
+.SH AUTHOR
+This manual page has been written by Bilibop Project <quidame@poivron.org>.

@@ -1,0 +1,91 @@
+#!/bin/sh
+
+set -e
+
+# Source debconf library:
+. /usr/share/debconf/confmodule
+
+global_filter_is_supported() {
+    local version="$(dpkg -l lvm2 | awk '/^ii/ {print $3}')"
+    dpkg --compare-versions ${version} ge 2.02.98
+}
+
+case "${1}" in
+    purge)
+        # Remove custom rules:
+        rm -f /etc/udev/rules.d/66-bilibop.rules
+
+        # Restore GRUB device.map
+        DEVICE_MAP="/boot/grub/device.map"
+        if [ -f "${DEVICE_MAP}.bak" -o -h "${DEVICE_MAP}.bak" ]; then
+            rm -f ${DEVICE_MAP}
+            mv ${DEVICE_MAP}.bak ${DEVICE_MAP}
+        fi
+
+        # Comment bilibop-rules specific configuration variables in
+        # the common bilibop config file:
+        CONFIGFILE="/etc/bilibop/bilibop.conf"
+        if grep -Eqs '^[[:blank:]]*BILIBOP_RULES(_[A-Z]+)+=' ${CONFIGFILE}; then
+            sed -Ei 's,^\s*BILIBOP_RULES(_[A-Z]+)+=,#&,' ${CONFIGFILE}
+        fi
+
+        # Reset some LVM settings to what they were before the installation of
+        # this package, but if, and only if lvm.conf has been modified through
+        # debconf (during installation or with 'dpkg-reconfigure bilibop-rules')
+        LVMCONF="/etc/lvm/lvm.conf"
+        lvm_variables="obtain_device_list_from_udev filter"
+        global_filter_is_supported && lvm_variables="${lvm_variables} global_filter"
+        db_get bilibop-rules/physical_volumes_filter/system-only
+        if [ -f "${LVMCONF}" -a "${RET}" = "true" ]; then
+            for lvmvar in ${lvm_variables}; do
+                db_get bilibop-rules/physical_volumes_filter/${lvmvar}
+                if [ -n "${RET}" ] && grep -q "^[[:blank:]]*${lvmvar}[[:blank:]]*=" ${LVMCONF}; then
+                    grep -Eq "^[[:blank:]]*${lvmvar}[[:blank:]]*=[[:blank:]]*${RET}[[:blank:]]*(#|$)" ${LVMCONF} ||
+                    sed -Ei "s@^(\s*${lvmvar}\s*=).*@\1 ${RET}@" ${LVMCONF}
+                fi
+            done
+        fi
+        # And then purge the database:
+        db_purge
+        db_stop
+        ;;
+esac
+
+case "${1}" in
+    purge|remove)
+        # Remove bilibop-rules script from the initramdisk:
+        if [ -x /usr/sbin/update-initramfs ]; then
+            update-initramfs -u
+        fi
+
+        # Trigger uevents for block devices owned by 'disk' group.
+        if [ -f /etc/udev/udev.conf ]; then
+            . /etc/udev/udev.conf
+        fi
+        udev_root="${udev_root:-/dev}"
+        udev_root="${udev_root%/}"
+
+        if [ -f /proc/partitions -a -d /sys/block -a -c ${udev_root}/null ] &&
+            invoke-rc.d udev status >${udev_root}/null 2>&1; then
+            cd ${udev_root}
+            for dev in $(find * -type b -group disk); do
+                grep -q "[[:blank:]]${dev}$" /proc/partitions &&
+                opt="${opt} --sysname-match=${dev}"
+            done
+            udevadm trigger ${opt}
+            udevadm settle
+            cd ${OLDPWD}
+        fi
+
+        # Udev does not remove empty tag directories; so we do it here.
+        for tag in BILIBOP INSIDEV; do
+            if [ -d /run/udev/tags/${tag} ]; then
+                rmdir --ignore-fail-on-non-empty /run/udev/tags/${tag}
+            fi
+        done
+        ;;
+esac
+
+#DEBHELPER#
+:
+# vim: et ts=4 sts=4 sw=4

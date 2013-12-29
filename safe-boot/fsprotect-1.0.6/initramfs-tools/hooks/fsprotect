@@ -1,0 +1,24 @@
+#!/bin/sh
+
+PREREQ=""
+prereqs()
+{
+	echo "$PREREQ"
+}
+
+case $1 in
+	prereqs)
+		prereqs
+		exit 0
+	;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+manual_add_modules aufs
+# force_load aufs
+
+copy_exec /bin/grep "/bin"
+copy_exec /bin/is_aufs "/bin"
+copy_exec /usr/bin/touch "/bin"
+

@@ -1,0 +1,27 @@
+#!/bin/sh
+
+set -e
+
+case "${1}" in
+    purge)
+        # Comment bilibop-lockfs specific configuration variables in
+        # the common bilibop config file:
+        CONFIGFILE="/etc/bilibop/bilibop.conf"
+        if grep -qs '^[[:blank:]]*BILIBOP_LOCKFS\(_[A-Z]\+\)*=' ${CONFIGFILE}; then
+            sed -i 's,^[[:blank:]]*BILIBOP_LOCKFS\(_[A-Z]\+\)*=,#&,' ${CONFIGFILE}
+        fi
+        ;;
+esac
+
+case "${1}" in
+    purge|remove)
+        # Remove bilibop-lockfs scripts from the initramdisk:
+        if [ -x /usr/sbin/update-initramfs ]; then
+            update-initramfs -u
+        fi
+        ;;
+esac
+
+#DEBHELPER#
+:
+# vim: et ts=4 sts=4 sw=4

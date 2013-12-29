@@ -1,0 +1,5 @@
+#!/bin/sh
+interface=${PWD%-wpa}
+interface=${interface##*/}
+rm -f /run/wpa_supplicant/$interface
+exec wpa_supplicant -i $interface -D nl80211,wext -c/etc/wpa_supplicant/wpa_supplicant.conf 2>&1

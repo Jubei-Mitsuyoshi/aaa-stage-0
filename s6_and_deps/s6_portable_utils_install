@@ -1,0 +1,53 @@
+ How to install s6-portable-utils
+
+Like any other piece of software (and information generally), s6-portable-utils comes with NO WARRANTY.
+
+s6-portable-utils is available under the terms of the ISC license, see the included package/COPYING file.
+Requirements
+System
+
+    A Unix-like system
+
+Build-time
+
+    A standard C development environment
+    The skalibs package, version 1.4.0 or higher
+
+Run-time
+
+Depending on the way you compile and link s6-portable-utils:
+
+    No dependencies (static executables)
+    or a standard C run-time environment (dynamic executables with flag-allstatic)
+    or a standard C run-time environment and the skalibs package, version 1.4.0 or higher (dynamic executables without flag-allstatic)
+
+Installation
+
+s6-portable-utils is best used with the slashpackage convention, but it is not a hard requirement.
+
+    Create a /package directory:
+
+         mkdir -p /package
+         chmod 1755 /package
+         cd /package
+
+    (If you are not following the slashpackage convention, you can use any temporary build directory instead.)
+    Download the latest version of s6-portable-utils, s6-portable-utils-1.0.2.tar.gz, into /package.
+    Unpack the s6-portable-utils package:
+
+         tar -zxpvf s6-portable-utils-1.0.2.tar.gz
+         # if you do not have GNU tar, check with your gunzip and tar manual pages.
+         rm s6-portable-utils-1.0.2.tar.gz
+         cd admin/s6-portable-utils-1.0.2
+
+    Configure the package by editing the files in conf-compile/ following these instructions. s6-portable-utils currently does not support other flags than flag-allstatic and flag-slashpackage.
+    Compile and set up s6-portable-utils:
+
+         make
+         sudo make install
+
+    The compilation and installation processes are detailed here.
+    To save disk space:
+
+         make clean
+

@@ -1,0 +1,42 @@
+#!/bin/sh
+set -e
+
+test "$1" = 'install' || test "$1" = 'upgrade' || exit 0
+
+check_conffile() {
+  test -e "$1" || return 0
+  md5=`md5sum <"$1"`
+  md5=${md5%% *}
+  md5orig=`dpkg-query -W -f '${Conffiles}\n' runit |grep " $1 "`
+  md5orig=${md5orig## * }
+  test "$md5" != "$md5orig" || rm -f "$1"
+}
+
+if dpkg --compare-versions "$2" lt '1.4.0-0'; then
+  check_conffile /etc/runit/getty-5/run
+  check_conffile /etc/runit/getty-5/finish
+  ! test -d /var/run/getty-5 ||
+    mv -f /var/run/getty-5 /var/run/sv.getty-5
+fi
+
+test "$1" = 'upgrade' || exit 0
+
+if test -n "$2" && dpkg --compare-versions "$2" le '1.8.0-2'; then
+  # move /var/service/ to /etc/service/
+  if test -h /var/service &&
+   test "$(readlink /var/service)" = /etc/runit/runsvdir/current; then
+    test ! -e /etc/service || rmdir /etc/service 2>/dev/null ||
+      mv /etc/service /etc/service'{old}'
+    mv /var/service /etc/service
+    ln -s /etc/service /var/service
+  else
+    if test -e /var/service; then
+      mkdir -p /etc/service
+      test -z "$(ls -1 /var/service/ 2>/dev/null)" ||
+        cp -a /var/service/* /etc/service/
+    fi
+  fi
+fi
+
+test ! -x /sbin/runit || test -e /sbin/runit.old || \
+  ln /sbin/runit /sbin/runit.old

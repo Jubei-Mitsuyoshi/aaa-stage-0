@@ -1,0 +1,112 @@
+#!/bin/sh
+
+PREREQ="klibc"
+
+prereqs()
+{
+	echo "$PREREQ"
+}
+
+case $1 in
+prereqs)
+	prereqs
+	exit 0
+	;;
+esac
+
+# Add bilibop functions and needed commands to use them.
+
+### BEGIN ###
+. /usr/share/initramfs-tools/hook-functions
+
+# Copy the needed bilibop functions files:
+cp --parents /lib/bilibop/common.sh ${DESTDIR}
+cp --parents /lib/bilibop/lockfs.sh ${DESTDIR}
+
+# Add commands needed by the bilibop functions. This depends if busybox is
+# added too or not.
+if	[ "${BUSYBOX}" = "n" -o ! -e ${BUSYBOXDIR}/busybox ]
+then
+	copy_exec /bin/df	/bin
+	copy_exec /bin/grep	/bin
+	copy_exec /bin/sed	/bin
+	copy_exec /sbin/blockdev /sbin
+	# replace klibc's 'readlink':
+	rm -f ${DESTDIR}/bin/readlink
+	copy_exec /bin/readlink	/bin
+fi
+
+# Copy the needed module:
+manual_add_modules aufs
+
+# Be sure the removable media hosting the system can be managed:
+force_load usb-storage
+force_load firewire-sbp2
+force_load mmc_block
+
+
+# Add a list of LV used by local filesystems.
+if	[ -x /sbin/lvm ]
+then
+	lv_list=$(lvm lvs --noheadings -o vg_name,lv_name)
+	[ -n "${lv_list}" ] || exit 0
+else
+	exit 0
+fi
+
+. /lib/bilibop/common.sh
+get_udev_root
+
+mkdir -p ${DESTDIR}/etc/lvm
+LV_LIST="${DESTDIR}/etc/lvm/bilibop"
+
+for dev in $(grep -v '^[[:blank:]]*\(#\|$\)' /etc/fstab | sed 's,^\s*\([^[:blank:]]\+\)\s.*,\1,')
+do
+	case "${dev}" in
+		UUID=*|LABEL=*)
+			dev="$(findfs ${dev})"
+			;;
+		/*)	;;
+		*)	continue ;;
+	esac
+	dev="$(readlink -f ${dev})"
+	devlist="${devlist} ${dev}"
+done
+
+[ -f "/etc/crypttab" ] &&
+for dev in $(grep -v '^[[:blank:]]*\(#\|$\)' /etc/crypttab | sed 's,^\s*[^[:blank:]]\+\s\+\([^[:blank:]]\+\)\s.*,\1,')
+do
+	case "${dev}" in
+		UUID=*|LABEL=*)
+			dev="$(findfs ${dev})"
+			;;
+		/*)	;;
+		*)	continue ;;
+	esac
+	dev="$(readlink -f ${dev})"
+	devlist="${devlist} ${dev}"
+done
+
+echo "${lv_list}" |
+while read VG LV
+do
+	for dev in ${devlist}
+	do
+		case "${dev}" in
+			${udev_root}/dm-*)
+				if	[ "$(readlink -f ${udev_root}/${VG}/${LV})" = "${dev}" ] ||
+					[ "$(readlink -f ${udev_root}/mapper/${VG}-${LV})" = "${dev}" ]
+				then	touch ${LV_LIST}
+					echo ${VG}/${LV} >>${LV_LIST}
+					break
+				fi
+				;;
+			*)
+				continue
+				;;
+		esac
+	done
+done
+
+:
+### END ###

@@ -1,0 +1,384 @@
+Description: <short summary of the patch>
+     made this patch before realised deb packager had already
+     done so
+Author: Jonathan Nieder <jrnieder@gmail.com>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: http://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: <YYYY-MM-DD>
+
+--- runit-2.1.1.orig/runit-2.1.1/doc/benefits.html
++++ runit-2.1.1/runit-2.1.1/doc/benefits.html
+@@ -159,7 +159,7 @@ sysvinit</a>.
+ Stage 2 is packaging friendly:
+ all a software package that provides a service needs to do is to include
+ a <i>service directory</i> in the package, and to provide a symbolic link
+-to this directory in <tt>/service/</tt>.
++to this directory in <tt>/etc/service/</tt>.
+ The service will be started within five seconds, and automatically at boot
+ time.
+ The package's install and update scripts can use the reliable control
+--- runit-2.1.1.orig/runit-2.1.1/doc/faq.html
++++ runit-2.1.1/runit-2.1.1/doc/faq.html
+@@ -216,12 +216,12 @@ How do I tell runit about the new servic
+ up and runs the service by default?
+ <p>
+ Answer:
+-Create a symbolic link in <tt>/service/</tt> pointing to the service
++Create a symbolic link in <tt>/etc/service/</tt> pointing to the service
+ directory, runit will pick up the service within the next five seconds,
+ and automatically start it on system boot.
+ E.g.:
+ <pre>
+- # ln -s /etc/sv/getty-2 /service/
++ # ln -s /etc/sv/getty-2 /etc/service/
+ </pre>
+ 
+ <hr>
+@@ -283,13 +283,13 @@ supervision.
+ How do I tell runit?
+ <p>
+ Answer:
+-Remove the symbolic link in <tt>/service/</tt> pointing to the service
++Remove the symbolic link in <tt>/etc/service/</tt> pointing to the service
+ directory, runit recognizes the removed service within the next five
+ seconds, then stops the service, the optional log service, and finally the
+ supervisor process.
+ E.g.:
+ <pre>
+- # rm /service/getty-2
++ # rm /etc/service/getty-2
+ </pre>
+ 
+ <hr>
+@@ -398,7 +398,7 @@ Does this work for user-specific service
+ Answer:
+ Yes.
+ E.g.: to provide the user <tt>floyd</tt> with facility to manage services
+-through <tt>~/service/</tt>, <a href="#createlog">create a service</a>
++through <tt>~/etc/service/</tt>, <a href="#createlog">create a service</a>
+ <tt>runsvdir-floyd</tt> with the following run script and a usual log/run
+ script, and <a href="#tell">tell runit</a> about the service
+ <pre>
+@@ -407,7 +407,7 @@ script, and <a href="#tell">tell runit</
+  exec chpst -ufloyd runsvdir /home/floyd/service
+ </pre>
+ Now <tt>floyd</tt> can create services on his own, and manage them through
+-symbolic links in <tt>~/service/</tt> to have them run under his user id.
++symbolic links in <tt>~/etc/service/</tt> to have them run under his user id.
+ 
+ <hr>
+ <a name="readonlyfs"><h3>
+--- runit-2.1.1.orig/runit-2.1.1/doc/replaceinit.html
++++ runit-2.1.1/runit-2.1.1/doc/replaceinit.html
+@@ -53,7 +53,7 @@ needed), and tell <a href="runsvdir.8.ht
+ <i>service</i>:
+ <pre>
+  # mkdir -p /service
+- # ln -s /etc/sv/getty-5 /service/
++ # ln -s /etc/sv/getty-5 /etc/service/
+ </pre>
+ Start <i>runit</i>'s stage 2 for testing:
+ <pre>
+@@ -178,7 +178,7 @@ and tell <a href="runsvdir.8.html">runsv
+ <i>service</i>:
+ <pre>
+  # mkdir -p /service
+- # ln -s /etc/sv/getty-5 /service/
++ # ln -s /etc/sv/getty-5 /etc/service/
+ </pre>
+ Start <i>runit</i>'s stage 2 for testing:
+ <pre>
+--- runit-2.1.1.orig/runit-2.1.1/doc/runlevels.html
++++ runit-2.1.1/runit-2.1.1/doc/runlevels.html
+@@ -25,11 +25,11 @@ Create the following directories and sym
+  # ln -s /etc/sv/getty-5 /etc/runit/runsvdir/single/
+  # ln -s default /etc/runit/runsvdir/current
+ </pre>
+-Copy the contents of <tt>/service/</tt> to
+-<tt>/etc/runit/runsvdir/current/</tt> and replace <tt>/service/</tt>
++Copy the contents of <tt>/etc/service/</tt> to
++<tt>/etc/runit/runsvdir/current/</tt> and replace <tt>/etc/service/</tt>
+ with a symbolic link:
+ <pre>
+- # cp -pR /service/* /etc/runit/runsvdir/current/
++ # cp -pR /etc/service/* /etc/runit/runsvdir/current/
+  # mv -f /service /service.old && \
+      ln -s /etc/runit/runsvdir/current /service
+ </pre>
+--- runit-2.1.1.orig/runit-2.1.1/doc/runscripts.html
++++ runit-2.1.1/runit-2.1.1/doc/runscripts.html
+@@ -317,7 +317,7 @@ automatically, but then it's not supervi
+ </pre>
+ <pre>
+  #!/bin/sh
+- if svok /service/dsvclockd; then
++ if svok /etc/service/dsvclockd; then
+    sleep 2 # wait to make sure dsvclockd is initialized
+    exec 2&gt;&amp;1
+    exec envdir ./env /usr/lib/inet/in.dhcpd -b manual -d # -v
+@@ -390,7 +390,7 @@ to be set up.
+ <pre>
+  #!/bin/sh
+  exec 2&gt;&amp;1
+- sv start /service/portmap || exit 1
++ sv start /etc/service/portmap || exit 1
+  exec famd -T 0 -f
+ </pre>
+ <hr>
+@@ -557,7 +557,7 @@ to be set up.
+ (<i>Debian sid</i>, <i>FreeBSD 5.3-REL</i>)
+ <pre>
+  #!/bin/sh
+- sv start /service/getty-* || exit 1
++ sv start /etc/service/getty-* || exit 1
+  exec kdm -nodaemon
+ </pre>
+ <hr>
+@@ -1022,7 +1022,7 @@ to be set up.
+ <hr>
+ <h3><a name="wvdial">A <tt>wvdial</tt> run script</a></h3>
+ (<i>Slackware Linux 9.0</i>, the service should have a <tt>down</tt>
+-file, use <tt>svc -o /service/wvdial</tt> to bring up a ppp connection)
++file, use <tt>svc -o /etc/service/wvdial</tt> to bring up a ppp connection)
+ <pre>
+  #!/bin/sh
+  exec 2&gt;&amp;1
+@@ -1036,7 +1036,7 @@ to be set up.
+ (<i>Linux</i>)
+ <pre>
+  #!/bin/sh
+- sv start /service/vc-* || exit 1
++ sv start /etc/service/vc-* || exit 1
+  exec xdm -nodaemon
+ </pre>
+ <hr>
+--- runit-2.1.1.orig/runit-2.1.1/doc/runsv.8.html
++++ runit-2.1.1/runit-2.1.1/doc/runsv.8.html
+@@ -108,9 +108,9 @@ command is ignored if it is given to <i>
+ <p>
+ Example:
+ to send a TERM signal to the socklog-unix service, either do   # sv term
+-/service/socklog-unix<br>
++/etc/service/socklog-unix<br>
+   or<br>
+-   # printf t &gt;/service/socklog-unix/supervise/control<br>
++   # printf t &gt;/etc/service/socklog-unix/supervise/control<br>
+  <p>
+ <i><b>printf</b>(1)</i> usually blocks if no <b>runsv</b> process is running in the service
+ directory. 
+--- runit-2.1.1.orig/runit-2.1.1/doc/runsvchdir.8.html
++++ runit-2.1.1/runit-2.1.1/doc/runsvchdir.8.html
+@@ -21,7 +21,7 @@ If <i>dir</i> does not start with a slas
+ copies <i>current</i> to <i>previous</i>, and replaces <i>current</i> with a symlink pointing
+ to <i>dir</i>. <p>
+ Normally  <i>/service</i> is a symlink to <i>current</i>, and <i><b>runsvdir</b>(8)</i> is running
+-<i>/service/</i>. 
++<i>/etc/service/</i>. 
+ <h2><a name='sect3'>Exit Codes</a></h2>
+ <b>runsvchdir</b> prints an error message and exits 111 on
+ error. <b>runsvchdir</b> exits 0 on success. 
+--- runit-2.1.1.orig/runit-2.1.1/doc/sv.8.html
++++ runit-2.1.1/runit-2.1.1/doc/sv.8.html
+@@ -21,7 +21,7 @@ monitored by the <i><b>runsv</b>(8)</i>
+ <i>services</i> consists of one or more arguments,
+ each argument naming a directory <i>service</i> used by <i><b>runsv</b>(8)</i>. If <i>service</i> doesn&rsquo;t
+ start with a dot or slash and doesn&rsquo;t end with a slash, it is searched in
+-the default services directory <i>/service/</i>, otherwise relative to the current
++the default services directory <i>/etc/service/</i>, otherwise relative to the current
+ directory. <p>
+ <i>command</i> is one of up, down, status, once, pause, cont, hup, alarm,
+ interrupt, 1, 2, term, kill, or exit, or start, stop, restart, shutdown,
+@@ -158,7 +158,7 @@ implies <i>-v</i>. </dd>
+ 
+ <dt><b>SVDIR</b> </dt>
+ <dd>The environment variable $SVDIR overrides the
+-default services directory <i>/service/</i>. </dd>
++default services directory <i>/etc/service/</i>. </dd>
+ 
+ <dt><b>SVWAIT</b> </dt>
+ <dd>The environment variable $SVWAIT
+--- runit-2.1.1.orig/runit-2.1.1/doc/upgrade.html
++++ runit-2.1.1/runit-2.1.1/doc/upgrade.html
+@@ -15,16 +15,16 @@ a program with a different name as the 0
+ <h3>1.9.0 to 2.0.0</h3>
+ No further action from you is required.
+ <h3>1.8.0 to 1.9.0</h3>
+-The default directory for services is now <tt>/service/</tt>, and no longer
+-<tt>/var/service/</tt>.
++The default directory for services is now <tt>/etc/service/</tt>, and no longer
++<tt>/var/etc/service/</tt>.
+ To be consistent with the new default location, create a symlink when
+ upgrading
+ <pre>
+  # ln -s /var/service /
+ </pre>
+ When installing runit on a system that should comply with the Filesystem
+-Hierarchy Standard (FHS), neither <tt>/service/</tt> nor
+-<tt>/var/service/</tt> should be chosen, but <tt>/etc/service/</tt>.
++Hierarchy Standard (FHS), neither <tt>/etc/service/</tt> nor
++<tt>/var/etc/service/</tt> should be chosen, but <tt>/etc/etc/service/</tt>.
+ It is recommended to create a compatibility symlink <tt>/service</tt>
+ pointing to <tt>/etc/service</tt> in this case.
+ <h3>1.7.x to 1.8.0</h3>
+--- runit-2.1.1.orig/runit-2.1.1/doc/useinit.html
++++ runit-2.1.1/runit-2.1.1/doc/useinit.html
+@@ -21,7 +21,7 @@ adding <tt>/sbin/runsvdir-start</tt> to
+ <p>
+ In any case, you first need to copy the <i>stage 2</i> script to
+ <tt>/sbin/runsvdir-start</tt>, and create the services directory
+-<tt>/service/</tt>:
++<tt>/etc/service/</tt>:
+ <pre>
+  # install -m0750 /package/admin/runit/etc/2 /sbin/runsvdir-start
+  # mkdir -p /service
+--- runit-2.1.1.orig/runit-2.1.1/doc/utmpset.8.html
++++ runit-2.1.1/runit-2.1.1/doc/utmpset.8.html
+@@ -23,7 +23,7 @@ update the utmp file, the <i><b>getty</b
+ other services. <p>
+ To enable local login accounting, add <b>utmpset</b> to the <i><b>getty</b>(8)</i>
+ <i>finish</i> scripts, e.g.: <p>
+- $ cat /service/getty-5/finish<br>
++ $ cat /etc/service/getty-5/finish<br>
+   #!/bin/sh<br>
+   exec utmpset -w tty5<br>
+   $<br>
+--- runit-2.1.1.orig/runit-2.1.1/etc/debian/3
++++ runit-2.1.1/runit-2.1.1/etc/debian/3
+@@ -7,8 +7,8 @@ LAST=0
+ test -x /etc/runit/reboot && LAST=6
+ 
+ echo 'Waiting for services to stop...'
+-sv -w196 force-stop /service/*
+-sv exit /service/*
++sv -w196 force-stop /etc/service/*
++sv exit /etc/service/*
+ 
+ echo 'Shutdown...'
+ /etc/init.d/rc $LAST
+--- runit-2.1.1.orig/runit-2.1.1/etc/freebsd/3
++++ runit-2.1.1/runit-2.1.1/etc/freebsd/3
+@@ -4,8 +4,8 @@ exec 2>&1
+ PATH=/command:/sbin:/bin:/usr/sbin:/usr/bin
+ 
+ echo 'Waiting for services to stop...'
+-sv -w196 force-stop /service/*
+-sv exit /service/*
++sv -w196 force-stop /etc/service/*
++sv exit /etc/service/*
+ 
+ echo 'Shutdown...'
+ if test -x /etc/runit/reboot; then
+--- runit-2.1.1.orig/runit-2.1.1/etc/macosx/StartupItems/runit
++++ runit-2.1.1/runit-2.1.1/etc/macosx/StartupItems/runit
+@@ -12,8 +12,8 @@ StartService() {
+ }
+ StopService() {
+   ConsoleMessage "Stopping runit service supervision"
+-  sv -w196 force-stop /service/*
+-  sv exit /service/*
++  sv -w196 force-stop /etc/service/*
++  sv exit /etc/service/*
+ }
+ RestartService() {
+   return 0
+--- runit-2.1.1.orig/runit-2.1.1/etc/openbsd/3
++++ runit-2.1.1/runit-2.1.1/etc/openbsd/3
+@@ -4,8 +4,8 @@ exec 2>&1
+ PATH=/command:/sbin:/bin:/usr/sbin:/usr/bin
+ 
+ echo 'Waiting for services to stop...'
+-sv -w196 force-stop /service/*
+-sv exit /service/*
++sv -w196 force-stop /etc/service/*
++sv exit /etc/service/*
+ 
+ echo 'Shutdown...'
+ if test -x /etc/runit/reboot; then
+--- runit-2.1.1.orig/runit-2.1.1/man/runsv.8
++++ runit-2.1.1/runit-2.1.1/man/runsv.8
+@@ -157,9 +157,9 @@ This command is ignored if it is given t
+ .IR service /log/supervise/control.
+ .P
+ Example: to send a TERM signal to the socklog-unix service, either do
+-  # sv term /service/socklog-unix
++  # sv term /etc/service/socklog-unix
+  or
+-  # printf t >/service/socklog-unix/supervise/control
++  # printf t >/etc/service/socklog-unix/supervise/control
+ .P
+ .BR printf (1)
+ usually blocks if no
+--- runit-2.1.1.orig/runit-2.1.1/man/runsvchdir.8
++++ runit-2.1.1/runit-2.1.1/man/runsvchdir.8
+@@ -33,7 +33,7 @@ is a symlink to
+ and
+ .BR runsvdir (8)
+ is running
+-.IR /service/ .
++.IR /etc/service/ .
+ .SH EXIT CODES
+ .B runsvchdir
+ prints an error message and exits 111 on error.
+--- runit-2.1.1.orig/runit-2.1.1/man/sv.8
++++ runit-2.1.1/runit-2.1.1/man/sv.8
+@@ -30,7 +30,7 @@ If
+ .I service
+ doesn't start with a dot or slash and doesn't end with a slash, it is
+ searched in the default services directory
+-.IR /service/ ,
++.IR /etc/service/ ,
+ otherwise relative to the current directory.
+ .P
+ .I command
+@@ -217,7 +217,7 @@ This option implies
+ .TP
+ .B SVDIR
+ The environment variable $SVDIR overrides the default services directory
+-.IR /service/ .
++.IR /etc/service/ .
+ .TP
+ .B SVWAIT
+ The environment variable $SVWAIT overrides the default 7 seconds to wait
+--- runit-2.1.1.orig/runit-2.1.1/man/utmpset.8
++++ runit-2.1.1/runit-2.1.1/man/utmpset.8
+@@ -34,7 +34,7 @@ to the
+ .I finish
+ scripts, e.g.:
+ .P
+- $ cat /service/getty-5/finish
++ $ cat /etc/service/getty-5/finish
+  #!/bin/sh
+  exec utmpset \-w tty5
+  $
+--- runit-2.1.1.orig/runit-2.1.1/package/CHANGES
++++ runit-2.1.1/runit-2.1.1/package/CHANGES
+@@ -612,7 +612,7 @@ Tue,  1 Jan 2002 16:20:14 +0100
+   * new etc/freebsd: stages and getty service
+   * doc: replaceinit: how to replace bsd init (freebsd)
+   * svwaitup: minor code cleanup
+-  * doc: /service/getty-5/ as default getty service.
++  * doc: /etc/service/getty-5/ as default getty service.
+   * doc: index: related links added.
+   * package: install-man added for installing manpages in /usr/local/man/
+ 
+--- runit-2.1.1.orig/runit-2.1.1/src/sv.c
++++ runit-2.1.1/runit-2.1.1/src/sv.c
+@@ -32,7 +32,7 @@
+ char *progname;
+ char *action;
+ char *acts;
+-char *varservice ="/service/";
++char *varservice ="/etc/service/";
+ char **service;
+ char **servicex;
+ unsigned int services;

@@ -1,0 +1,70 @@
+Description: <short summary of the patch>
+   just converted existing diff to quilt3 patch
+Author: Jonathan Nieder <jrnieder@gmail.com>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: http://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: <YYYY-MM-DD>
+
+--- runit-2.1.1.orig/runit-2.1.1/man/sv.8
++++ runit-2.1.1/runit-2.1.1/man/sv.8
+@@ -111,6 +111,11 @@ Same as
+ but wait up to 7 seconds for the service to become down.
+ Then report the status or timeout.
+ .TP
++.B reload
++Same as
++.IR hup ,
++and additionally report the status afterwards.
++.TP
+ .B restart
+ Send the commands
+ .IR term ,
+@@ -182,6 +187,15 @@ process to terminate.
+ Then report the status, and on timeout send the service the
+ .I kill
+ command.
++.TP
++.B try-restart
++if the service is running, send it the
++.I term
++and
++.I cont
++commands, and wait up to 7 seconds for the service to restart.
++Then report the status or timeout.
++
+ .SS Additional Commands
+ .TP
+ .B check
+--- runit-2.1.1.orig/runit-2.1.1/src/sv.c
++++ runit-2.1.1/runit-2.1.1/src/sv.c
+@@ -305,9 +305,11 @@ int main(int argc, char **argv) {
+     acts ="d"; kll =1; cbk =&check; break;
+   case 'T':
+     acts ="tc"; kll =1; cbk =&check; break;
++  case 't':
++    if (!str_diff(action, "try-restart")) { acts ="tc"; cbk =&check; break; }
+   case 'c':
+     if (!str_diff(action, "check")) { act =0; acts ="C"; cbk =&check; break; }
+-  case 'u': case 'd': case 'o': case 't': case 'p': case 'h':
++  case 'u': case 'd': case 'o': case 'p': case 'h':
+   case 'a': case 'i': case 'k': case 'q': case '1': case '2':
+     action[1] =0; acts =action; break;
+   case 's':
+@@ -318,6 +320,7 @@ int main(int argc, char **argv) {
+     act =&status; cbk =0; break;
+   case 'r':
+     if (!str_diff(action, "restart")) { acts ="tcu"; cbk =&check; break; }
++    if (!str_diff(action, "reload")) { acts ="h"; cbk =&check; break; }
+     usage();
+   case 'f':
+     if (!str_diff(action, "force-reload"))

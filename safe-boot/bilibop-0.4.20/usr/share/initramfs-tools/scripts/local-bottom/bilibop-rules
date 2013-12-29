@@ -1,0 +1,49 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs()
+{
+	echo "$PREREQ"
+}
+
+case $1 in
+	prereqs)
+		prereqs
+		exit 0
+		;;
+esac
+
+# Create non-empty symlinked files in temporary directories under /run.
+# bilibop-specific temporary directory (in /run), and populate it.
+
+### BEGIN ###
+
+if [ -f /etc/udev/udev.conf ]; then
+	. /etc/udev/udev.conf
+fi
+udev_root="${udev_root:-/dev}"
+udev_root="${udev_root%/}"
+
+if [ -f ${rootmnt}/etc/bilibop/bilibop.conf ]; then
+	. ${rootmnt}/etc/bilibop/bilibop.conf
+fi
+BILIBOP_RUNDIR="/run/${BILIBOP_COMMON_BASENAME:=bilibop}"
+
+mkdir -p "${BILIBOP_RUNDIR}"
+
+# Create a fake device map (optional, but enabled by default):
+[ "${BILIBOP_RULES_FAKE_DEVICE_MAP}" = "false" ] ||
+echo "(hd0)	${udev_root}/${BILIBOP_COMMON_BASENAME}/disk" >${BILIBOP_RUNDIR}/grub-device.map
+
+# Create two non-empty files. This last action is not absolutely necessary,
+# but avoids some udev complaints.
+ETC_RULES_DIR="${rootmnt}/etc/udev/rules.d"
+RUN_RULES_DIR="/run/udev/rules.d"
+for rules in cd.rules net.rules; do
+	[ -e "${ETC_RULES_DIR}/70-persistent-${rules}" ] ||
+	echo "# 70-(un)persistent-${rules}" >${RUN_RULES_DIR}/70-persistent-${rules}
+done
+
+:
+### END ###

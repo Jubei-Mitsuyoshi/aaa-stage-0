@@ -1,0 +1,62 @@
+ How to install skalibs
+
+Like any other piece of software (and information generally), skalibs comes with NO WARRANTY.
+
+skalibs is available under the terms of the ISC license; see the included package/COPYING file.
+Requirements
+System
+
+    A Unix-like system
+
+Build-time
+
+    A standard C development environment
+
+Run-time
+
+No dependencies. skalibs does not run per se; it's used in making other software run.
+Installation
+
+skalibs is best used with the slashpackage convention, but it is not a hard requirement.
+
+    Create a /package directory:
+
+         mkdir -p /package
+         chmod 1755 /package
+         cd /package
+
+    (If you are not following the slashpackage convention, you can use any temporary build directory instead.)
+    Download the latest version of skalibs, skalibs-1.4.2.tar.gz, into /package.
+    Unpack the skalibs package:
+
+         tar -zxpvf skalibs-1.4.2.tar.gz
+         # if you do not have GNU tar, check with your gunzip and tar manual pages.
+         rm skalibs-1.4.2.tar.gz
+         cd prog/skalibs-1.4.2
+
+    If you're trying to build skalibs in a cross-compilation environment, then read that page.
+
+    The following instructions assume that you are installing skalibs as a native standalone package.
+    Configure the package by editing the files in conf-compile/ following these instructions.
+    Be aware that if you want to link skarnet.org software with a different libc than the default (for instance if you're a Linux user and want to use the uClibc or musl to make static executables), you will have to also compile skalibs with your chosen libc, so you need to modify conf-compile/conf-cc, conf-compile/conf-dynld and conf-compile/conf-ld accordingly.
+    If you want to change the default executable search path for the pathexec_run() function when the PATH environment variable is empty, also edit conf-defaultpath.
+    If you want EGD support for pseudorandom number generation, also edit conf-compile/conf-egd.
+    If you want global configuration files to go elsewhere than /etc, also edit conf-compile/conf-etc.
+    skalibs is now customizable via a set of compilation flags. Make sure to read this page to understand what they do and set the flags you need for your system.
+    Then compile and set up skalibs:
+
+         make
+         sudo make install
+
+    If you are following the slashpackage convention: assuming that $prefix is the contents of conf-compile/conf-sp_root (i.e. empty by default:
+        you must have unzipped the skalibs tarball in $prefix/package
+        the libraries will be available under $prefix/package/prog/skalibs/library/
+        the shared libraries (if any) will be available under $prefix/package/prog/skalibs/library.so
+        the header files will be available under $prefix/package/prog/skalibs/include/
+        system-dependent files that other packages may use to automatically configure themselves for your system can be found under $prefix/package/prog/skalibs/sysdeps/
+    If you are not following the slashpackage convention, you already have set up the installation paths via the conf-compile/conf-install-* files.
+    If you're going to move away from the default installation, be aware that system-critical binaries may depend on skalibs and particularly libstddjb, so if your policy is to dynamically link everything anyway (as is the case for instance with GNU distributions), make sure that at least libstddjb.so, and if possible other .so files, are always on the root filesystem, i.e. in in /lib as opposed to /usr/lib.
+    You can then delete the compilation temporary files. For a slashpackage installation, this is done with
+
+         make clean
+

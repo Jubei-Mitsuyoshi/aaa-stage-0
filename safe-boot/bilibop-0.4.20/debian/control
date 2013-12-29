@@ -1,0 +1,129 @@
+Source: bilibop
+Section: admin
+Priority: optional
+Maintainer: Yann Amar <quidame@poivron.org>
+Build-Depends: debhelper (>= 9), po-debconf
+Standards-Version: 3.9.5
+Homepage: https://un.poivron.org/~quidame/wiki/bilibop
+Vcs-Git: http://poivron.org/~quidame/git/bilibop.git
+
+Package: bilibop
+Section: metapackages
+Priority: extra
+Architecture: linux-any
+Depends: bilibop-lockfs (= ${binary:Version}), bilibop-rules (= ${binary:Version}), ${misc:Depends}
+Description: run Debian GNU/Linux from external media - metapackage
+ ${Description}
+ .
+ The installation of this metapackage will install other BILIBOP packages
+ as dependencies. You should not install it, unless your system is writable
+ and runs from an external device.
+ .
+ ${Requirement}
+
+Package: bilibop-common
+Architecture: linux-any
+Depends: udev, ${misc:Depends}
+Suggests: aufs-tools, bilibop-lockfs, bilibop-device-policy, cryptsetup, dmsetup, lvm2
+Description: shell functions for bilibop scripts
+ ${Description}
+ .
+ This package provides shell functions usable by other bilibop scripts on the
+ running system or into the initramfs environment. These functions use /dev,
+ /proc and /sys databases to output the drive name or the partition hosting
+ the running system, and are fully usable by any unprivileged user or
+ application. Dm-crypt, LVM, loop devices and aufs root filesystems (and any
+ combination of them) are supported. A 'drivemap' command is also provided,
+ to show block devices in a tree of dependencies.
+ .
+ ${Requirement}
+
+Package: bilibop-lockfs
+Architecture: linux-any
+Depends: bilibop-common (= ${binary:Version}), initramfs-tools, initscripts (>= 2.88dsf-13.3), ${misc:Depends}
+Recommends: cryptsetup
+Suggests: aufs-tools, bilibop-device-policy, gnome-icon-theme, libnotify-bin, plymouth
+Description: lock filesystems and write changes into RAM
+ ${Description}
+ .
+ If the lockfs feature is enabled (in a configuration file, in the boot
+ commandline or by a heuristic), nothing will be written on the filesystems
+ listed in /etc/fstab, except for those that have been whitelisted, or for
+ the encrypted swap devices. More, bilibop-lockfs now is able to detect if
+ the drive has been locked by a physical switch, and then overrides its own
+ settings to unconditionally apply a 'hard' policy.
+ .
+ The root filesystem is locked (set readonly, using aufs) by an initramfs
+ script which also modifies the temporary fstab to prepare other filesystems
+ to be locked later by a mount helper script.
+ .
+ bilibop-lockfs provides the following features:
+  * whitelist based policy: filesystems on which you want to allow persistent
+    changes must be explicitly listed in a configuration file.
+  * swap devices policy: they can be used 'as is', noauto, only if encrypted,
+    only if encrypted with a random key, or not used at all.
+  * not only filesystems are set read-only, but also block devices: this
+    forbids changes of the partition table, boot sectors, LUKS headers and
+    LVM metadata.
+  * plymouth messages to know at boot time if bilibop-lockfs is enabled or
+    not, or if an error occured.
+  * desktop notifications at startup about filesystems status, to inform the
+    user that volatile or persistent changes are allowed or not, and where.
+ .
+ This package can be used as an alternative to fsprotect or overlayroot,
+ especially for writable operating systems embedded on a USB stick; but it
+ may also be installed on public or personal computers, for daily use,
+ kiosks, testing purposes, or as a tool in anti-forensics strategies.
+ .
+ ${Requirement}
+
+Package: bilibop-rules
+Architecture: linux-any
+Depends: bilibop-common (= ${binary:Version}), initramfs-tools, initscripts (>= 2.88dsf-13.3), ${misc:Depends}
+Recommends: grub-common, lvm2, udisks | udisks2
+Suggests: bilibop-lockfs, cryptsetup, grub-coreboot | grub-efi-amd64 | grub-efi-ia32 | grub-ieee1275 | grub-pc, pmount, policykit-1
+Conflicts: bilibop-udev
+Provides: bilibop-device-policy
+Description: device management rules for OS running from external media
+ ${Description}
+ .
+ This package provides a udev rules file to manage the external drive hosting
+ the running system. Its main goal is to forbid low-level write access on this
+ drive and its partitions by any unprivileged user or application, but some
+ other convenient and optional rules have been added for desktop-level
+ management of the system disk and partitions (need udisks), as well as the
+ internal disks of the computer. The 'lsbilibop' command allows the admin to
+ update udev properties of the devices after the configuration file has been
+ modified.
+ .
+ To ease device management, bilibop-rules also provides helper scripts to:
+  * build custom bilibop udev rules running faster than the generic ones
+  * make some persistent and cumulative udev rules files unpersistent
+  * use either a fake or an always-up-to-date grub device map
+  * filter Physical Volumes, to activate only those needed by the system
+ .
+ This package is not designed to be used on internal disks. It works only
+ for OS installed on removable and writable media, including LiveUSB systems.
+ See also the bilibop-udev package.
+ .
+ ${Requirement}
+
+Package: bilibop-udev
+Architecture: linux-any
+Depends: bilibop-common (= ${binary:Version}), ${misc:Depends}
+Suggests: bilibop-lockfs
+Conflicts: bilibop-rules
+Provides: bilibop-device-policy
+Description: minimal udev rule for Debian GNU/Linux running from external media
+ ${Description}
+ .
+ This package provides a udev rules file to manage the external drive hosting
+ the running system. Its goal is to forbid low-level write access on this
+ drive and its partitions by any unprivileged user or application.
+ .
+ This package is not designed to be used on internal disks. It works only
+ for OS installed on removable and writable media, especially LiveUSB systems.
+ See also the bilibop-rules package.
+ .
+ ${Requirement}
+
