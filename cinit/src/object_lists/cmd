@@ -1,0 +1,17 @@
+client/cmd.o
+comm/cinit_cp_data.o
+generic/print_errno.o
+generic/path_absolute.o
+generic/mini_printf.o
+ipc/current/cinit_ipc_logon.o
+ipc/current/cinit_ipc_csend.o
+ipc/current/cinit_ipc_cread.o
+ipc/current/cinit_ipc_logoff.o
+libcinit/cinit_get_version.o
+libcinit/cinit_send_to.o
+libcinit/cinit_svc_get_pid.o
+libcinit/cinit_svc_get_status.o
+libcinit/cinit_prepare_comm.o
+libcinit/cinit_svc_enable.o
+libcinit/cinit_svc_disable.o
+libcinit/cinit_flag_to_uint32_t.o

@@ -1,0 +1,140 @@
+cinit - Example directory structure
+===================================
+Nico Schottelius <nico-cinit__@__schottelius.org>
+0.1, for cinit 0.3, Initial Version from 2005-12-12
+:Author Initials: NS
+
+
+This document describes a tested directory hierarchy that
+you could adapt for your setup. But this is no need, you
+are free to design your own layout and/or improve this one.
+
+
+Main idea
+---------
+The main reason for this layout is that all services directly located
+in /etc/cinit/svc/ would create a not-so-easy maintainable chaos.
+
+
+Categories
+----------
+When thinking about grouping some parts together, there came some categories
+to my mind:
+
+- init: This must be there. It is no real choice (well, working with profiles
+  is an alternative)
+- we need to mount things
+- things that are used to 'configure' my local system
+- network connectivity
+- services only locally reachable
+- services remote reachable
+- something that let me login
+
+With these requirements the following categories (=directories) were created:
+
+
+getty
+~~~~~
+Gettys are those little and nice programs that allow you to login.
+As we normally want to have more than one it seems to be senseful
+to create a category for it.
+
+For the creation of the getty services itself, an extremly simply
+scheme is used: Simply create services with the number of the getty
+that is running. This results in the following setup:
+
+--------------------------------------------------------------------------------
+   /etc/cinit/svc/getty/
+      2/
+      3/
+      4/
+      ...
+--------------------------------------------------------------------------------
+
+The number '1' is skipped, because cinit normally logs to stdout that is
+connected to the first console.
+
+`/etc/cinit/svc/getty/needs/` contains all enabled gettys. This way
+`/etc/cinit/svc/init/needs/` can refer to `/etc/cinit/svc/getty/` only
+but will catch all gettys.
+
+If you want to allow users to login via a graphical login screen
+(also known as X11 with xdm/gdm/kdm) you could add this service as
+`getty/gdm` for instance, because gdm is just another getty (just with
+more colours).
+
+
+init
+~~~~
+`init` is the service everything begins with. You simply put all other
+categories into the `needs` (or if soft-dependencies to `wants`) of this
+service.
+
+
+local-services
+~~~~~~~~~~~~~~
+This directory contains all the services that are only locally reachable.
+This may contain local webserver, a MTA that only accepts mails
+via /usr/sbin/sendmail (like qmail is capable of) or some other local
+only available services.
+
+
+local-tuning
+~~~~~~~~~~~~
+This directory is used for local configuration. It contains services,
+that setup the keyboard layout (perhaps called `local-tuning/keyboard-layout`
+needed by `getty`!), adjust system to hardware time, cleans /tmp
+(`local-tuning/tmpclean`), ...
+
+
+mount
+~~~~~
+This directory contains the service to remount the root filesystem
+read-write (`mount/root`) which is dependend on the filesystem
+check (`mount/root/fsck`, also have a look at 'special-services.text').
+It also contains the services that mount the pseudo filesystems
+(`mount/proc` (FreeBSD, Linux) and `mount/sys` (Linux)) and all
+other partitions (`mount/home`, `mount/usr`,...) which again contain
+a dependency to the filesystem check, if necessary.
+
+
+network
+~~~~~~~
+The `network` directory should cover all of the network basics.
+This includes setting the hostname (`network/hostname`) configuring
+network devices (`network/eth0.static`, `network.ath0.master`) limiting
+network accesses (`network/firewall`), enable packet forwarding
+(`network/ip-forward`), adjusting the available bandwith
+(`network/traffic-shaping`), ...
+
+
+If there are too many network devices, you could create a subfolder named
+`network/devices/`.
+
+I used to suffix the network devices with the mode they run, so I can
+use different modes in different profiles (setup the wireless card in
+master mode at home, in ad-hoc mode at a friend and in managed mode at
+work).
+
+
+remote-services
+~~~~~~~~~~~~~~~~
+Remote-services are all services that are reachable from remote hosts.
+This includes ssh (`remote-services/opensshd`), webserver
+(`remote-services/lighttpd` or `remote-services/apache22`).
+
+Most servers `need` a working network interface, before they can be
+started, but mostly it is enough to have the loopback interface up.
+
+This results in the possible `needs` dependency for `network/loopback`
+and soft dependencies, what we call `wants` on `network`.
+
+Other examples for remote services are
+- dns (`remote-services/dnscache`, `remote-services/tinydns`,
+  `remote-services/bind`)
+- fileserver (`remote-services/smbd`, `remote-services/mmbd`)
+- network infrastructure (`remote-services/bgpd`)
+- many others
+
+Many daemons used for `remote-services` are described in
+'daemons.backgrounding.text'.

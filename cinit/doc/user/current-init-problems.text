@@ -1,0 +1,170 @@
+Currently available init systems and their problems
+===================================================
+Nico Schottelius <nico-cinit__@__schottelius.org>
+0.1, for cinit 0.3, Initial version from 2006-12-11
+:Author Initials: NS
+
+
+This document describes some other init systems, especially
+the "traditional" ones and describes their problems.
+
+
+Introduction
+-------------
+some history, sysv, bsd,
+
+minit, runit, initng, cinit, upstart
+
+
+Implementations
+---------------
+List of current implementations as of 2006-12-12.
+
+
+Linux Sys-V-Init
+~~~~~~~~~~~~~~~~
+Debian Sid
+
+/etc/inittab
+
+"First script" /etc/init.d/rcS (specified 
+/etc/init.d/rcS: Bourne shell script text executable
+
+Runlevels: 0-6, different states
+
+--------------------------------------------------------------------------------
+[9:51] hydrogenium:cinit-0.3pre6% /sbin/runlevel   
+N 2
+--------------------------------------------------------------------------------
+
+
+Depending on runlevel, the init calls /etc/init.d/rc $runlevel.
+
+This is manually configured in /etc/inittab
+
+/etc/init.d/rc: Bourne shell script text executable
+
+/etc/init.d/rc
+
+Calls symlinks in /etc/rc?.d. Each runlevel a directory:
+
+--------------------------------------------------------------------------------
+[9:51] hydrogenium:cinit-0.3pre6% ls -ld /etc/rc*.d
+drwxr-xr-x 2 root root 4096 2006-12-01 16:56 /etc/rc0.d
+drwxr-xr-x 2 root root 4096 2006-12-01 16:56 /etc/rc1.d
+drwxr-xr-x 3 root root 4096 2006-12-01 16:56 /etc/rc2.d
+drwxr-xr-x 2 root root 4096 2006-12-01 16:56 /etc/rc3.d
+drwxr-xr-x 2 root root 4096 2006-12-01 16:56 /etc/rc4.d
+drwxr-xr-x 2 root root 4096 2006-12-01 16:56 /etc/rc5.d
+drwxr-xr-x 2 root root 4096 2006-12-01 16:56 /etc/rc6.d
+drwxr-xr-x 2 root root 4096 2006-11-28 23:17 /etc/rcS.d
+--------------------------------------------------------------------------------
+
+
+
+rlmanager: sys-v-init hack
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+rlmanager: one script to be executed, sources
+simply configuration
+
+Gentoo Linux
+~~~~~~~~~~~~
+no content yet
+
+BSD init
+~~~~~~~~
+Analyzed on FreeBSD.
+/etc/rc
+/etc/rc.d/ system services
+/usr/local/etc/rc.d/ user installed services
+Scripts may use values from /etc/rc.conf to check whether
+they should be started or not.
+
+runit
+~~~~~
+Three stages: Script1, dependencies, Script3
+
+
+Initng
+~~~~~~
+no content yet
+
+minit
+~~~~~
+Focus on being small. Needs libowfat.
+Log support through pipe.
+
+
+
+
+
+Problems overview
+-----------------
+
+Scripts
+~~~~~~~
+Scripts are slow. Startup time. Execution time. Unecessary overhead.
+
+
+Sequential startup
+~~~~~~~~~~~~~~~~~~
+In the 'old' init systems there is no support of parallel execution.
+So if one services hangs at startup, the whole system has to wait
+(for instance a dhcp request). In the worst case this may result in
+a non-booting system. Systems with dependencies can start the gettys
+for login before, in parallel to or even after blocking services are
+started. The fact, that they *are* started means you can interact with
+the system, you can end looping or blocking services.
+
+So sequential startup may not only be the reason for a pretty
+slow system, but also for an unmaintainable one.
+
+Unecessary services
+~~~~~~~~~~~~~~~~~~~
+Many implementations try to do whatever-is-possible on boot, trying to
+cover every possible and impossible situation.
+
+Portmap without any program that needs it. 
+
+Starting all installed services per default (Debian) vs. let the
+user choose what to start (Gentoo).
+
+Nicht entfernte Altlasten ab und zu.
+
+
+No dependencies
+~~~~~~~~~~~~~~~
+Systems without dependencies may result in a chaos state after booting up.
+
+
+Only soft dependencies
+~~~~~~~~~~~~~~~~~~~~~~~
+The dependencies are used, but because of soft dependencies, services
+may be started although their dependency is missing.
+
+
+Parallel init system debugging
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In contrast to the old init systems, parallel executing init systems
+are much harder to debug. If the starting init systems does not have
+proper logging / reporting to the user (like cinit-0.2 has), the user
+may never find out, what happened and why.
+
+
+Parallel / dependency checking init system with variable boot order
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The boot order may be different each time you boot and is dependent
+on the success or failure of services. This way you can never tell
+exactly how and in which order they are executed. On multiprocessor
+machines, where processes may be truely executed in parallel, there
+is no order anymore, but there are n orders on n processors.
+
+To solve this issue, init systems which support parallel execution
+should ship with some testing tools, that simulate a startup.
+
+cinit will ship with such a tool in cinit-0.4.
+
+
+References
+----------
+no content yet

@@ -1,0 +1,71 @@
+#!/bin/sh
+# 
+# 2009      Nico Schottelius (nico-cinit at schottelius.org)
+# 
+# This file is part of cinit.
+#
+# cinit is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# cinit is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with cinit. If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# Enable agetty (6 times is fine)
+#
+
+################################################################################
+# standard vars stolen from cconf
+__pwd="$(pwd -P)"
+__mydir="${0%/*}"; __abs_mydir="$(cd "$__mydir" && pwd -P)"
+__myname=${0##*/}; __abs_myname="$__abs_mydir/$__myname"
+
+set -e
+. "$(dirname $0)/cinit-conf.read-conf"
+
+
+if [ $# -ne 1 ]; then
+   echo "${__myname}: <number of getties to start>"
+   echo ""
+   echo "   Allow login to your system using agetty"
+   echo ""
+   exit 23
+fi
+num_getties="$1"; shift
+
+SVCBASE="local-services/agetty"
+
+# agetty is called getty within debian/ubuntu -> FIXME: also search for agetty
+BINARY_PATH="$(which getty)"
+NEEDS="mount/root mount/proc"
+
+# Create container to hold all the getties
+cinit-conf.svc-create.template "${SVCBASE}"
+
+i=0
+while [ "$i" -lt "$num_getties" ]; do
+   SVC="${SVCBASE}/$i"
+   tty="tty${i}"
+   speed="38400"
+
+   cinit-conf.svc-create.template "${SVC}"
+   cinit-conf.svc.respawn.on "${SVC}"
+   cinit-conf.svc-on "${SVC}" "${BINARY_PATH}"
+   cinit-conf.svc-param.add "${SVC}" "${C_ON}" "${speed}" "${tty}"
+
+   cinit-conf.svc.dependency.add "${SVC}" "needs" $NEEDS
+
+   # add each getty to the "super-getty-service"
+   cinit-conf.svc.dependency.add "${SVCBASE}" "needs" "${SVC}"
+
+   i=$(($i+1))
+done
+
+exit 0

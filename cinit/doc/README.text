@@ -1,0 +1,60 @@
+cinit documentation
+====================
+Nico Schottelius <nico-cinit__@__schottelius.org>
+0.1, Initial Version from 2006-11-30
+:Author Initials: NS
+
+This directory contains the cinit documentation.
+
+Files and directories in this directory
+----------------------------------------
+
+changes/
+~~~~~~~~
+Changelogs from this and previous releases.
+
+devel/
+~~~~~~
+Developer related documents. Contains information for adding code,
+for developing external tools to cinit or code guidelines for writing
+patches to cinit.
+
+examples/
+~~~~~~~~~
+Example configurations to start with.
+
+man/
+~~~~
+Manpages for cinit and the utilities.
+
+todo/
+~~~~~
+Stuff that should be done, that has not yet been migrated to ditz.
+
+user/
+~~~~~
+The most important part: Documentation for users (aka sysadmins,
+hackers, endusers?): Explains howto install, configure, use and
+debug cinit.
+
+
+
+
+
+do-not-read/
+~~~~~~~~~~~~
+Stuff that is only kept for various strange reasons. Do not read it.
+
+
+do-not-read/ancient
+^^^^^^^^^^^^^^^^^^^
+Old documents, only thought to irritate you.
+They are not interesting for most people and may contain
+obsoleted or wrong information.
+
+
+do-not-read/braindumps
+^^^^^^^^^^^^^^^^^^^^^^
+Files I used to make the situation clear to myself.
+They are not interesting for most people and may contain
+obsoleted or wrong information.

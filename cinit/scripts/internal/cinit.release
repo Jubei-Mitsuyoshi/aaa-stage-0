@@ -1,0 +1,91 @@
+#!/bin/sh
+# Nico Schottelius
+# Build release tar
+# Date: Sat Oct 15 21:38:29 CEST 2005
+# Last Changed: ls -l
+
+################################################################################
+# standard vars stolen from cconf
+__pwd="$(pwd -P)"
+__mydir="${0%/*}"; __abs_mydir="$(cd "$__mydir" && pwd -P)"
+__myname=${0##*/}; __abs_myname="$__abs_mydir/$__myname"
+
+
+
+if [ $# -ne 1 ]; then
+   echo "This is a maintainer-only script to release cinit"
+   echo "${__myname}: version"
+   exit 1
+fi
+
+# paths
+D_BASE="/home/users/nico/privat/rechner/netz/seiten/www.nico.schottelius.org/src/software/cinit"
+D_DIR=${D_BASE}/archives/
+D_SOURCE=${D_BASE}/browse_source/
+
+# versions to check
+VERSION_CONF="$(head -n1 $(dirname $0)/../../conf/version | sed 's/^"\(.*\)"$/\1/')"
+VERSION_ARGV="$1"
+VERSION_GIT="$(git describe)"
+VERSION_README=$(grep -q "$VERSION_ARGV" README && echo $VERSION_ARGV)
+
+echo "=> Version commandline:  $VERSION_ARGV"
+echo "=> Version conf/version: $VERSION_CONF"
+echo "=> Version git:          $VERSION_GIT"
+echo "=> Version README:       $VERSION_README"
+
+if [ "$VERSION_ARGV" = "$VERSION_CONF" -a "$VERSION_ARGV" = "$VERSION_GIT" ]; then
+   echo "=> Version confirmed."
+else
+   echo "*** VERSION MISMATCH ***"
+   exit 42
+fi
+
+# Finally, accept the right version
+VERSION="$VERSION_GIT"
+NAME="cinit-${VERSION}"
+TARNAME="cinit-${VERSION}.tar.bz2"
+TARPATH="$D_DIR/$TARNAME"
+
+echo -n "=> Continue to release $NAME? "
+read yes
+
+git archive $VERSION --prefix="${NAME}/" --output="${TARPATH}"
+( cd "$D_SOURCE" && tar xvf "$TARPATH" )
+cp README "${D_BASE}.mdwn"
+
+echo "Please do not forget to update the website..."
+
+################################################################################
+# Unused, but interesting
+
+# make sure the examples are not executed anymore
+exit 0
+
+# match cinit-$version as directory name
+VERSION_DIR="$(cd "$DIR"; pwd -P | sed 's;.*/cinit-;;')"
+
+# grep version string from CHANGES file (often used, obsoleted here)
+VERSION_CHANGES="$(head -n1 "$(dirname $0)/../../CHANGES" | sed 's/cinit-\(.*\):.*/\1/')"
+
+# Correct umask 077 results
+echo "Correcting paranoid permissions"
+ssh "$D_HOST" "find \"$D_SOURCE/$RDIR\" -type f -exec chmod 0644 {} \\;"
+ssh "$D_HOST" "find \"$D_SOURCE/$RDIR\" -type d -exec chmod 0755 {} \\;"
+ssh "$D_HOST" "cd \"$D_SOURCE\" && rm -f \"$LINK\" && ln -s \"$RDIR\" \"$LINK\""
+
+# Create archive
+echo "Creating bzip2 compressed tar"
+cd $DDIR
+tar cj -X $DIR/.exclude -f "$OUT_NAME" "$RDIR"
+chmod 0644 "$OUT_NAME"
+
+# Transfer to a remote host
+echo "Transfering to $D_HOST"
+scp "$OUT_NAME" "$D_HOST:$D_DIR"
+
+echo "Extracting to $D_SOURCE"
+ssh "$D_HOST" "tar xfj $D_DIR/$OUT_NAME -C $D_SOURCE"
+
+
+

@@ -1,0 +1,25 @@
+--------------------------------------------------------------------------------
+Credits - People contributed to cinit
+Nico Schottelius, 2005-05-17 (Last Change: ls -l)
+--------------------------------------------------------------------------------
+
+The following list is sorted chronological, new contributors are
+added at the end of the list.
+
+
+René Nussbaumer
+   * helping with the general IPC idea
+   * testing and proof-reading code
+Marcus Przyklink
+   * coding linear lists, making MAX_SVC obsolete
+   * providing cinit-vs.pl to visualize the cinit-tree
+Matteo Croce
+   * finding good strip parameters to save about 30KiB (on glibc)
+Sandro Koechli
+   * testing, testing and testing cinit and cinit documentation
+Marcus Wagner
+   * building and maintaining the Debian package
+Peter Portmann
+   * testing cinit and documentation, writing cinit.graph.text in C, other coding
+Tonnerre Lombard
+   * NetBSD support (host + hints)

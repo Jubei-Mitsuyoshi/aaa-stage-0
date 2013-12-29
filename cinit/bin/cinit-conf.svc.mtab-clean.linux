@@ -1,0 +1,49 @@
+#!/bin/sh
+# 
+# 2009      Nico Schottelius (nico-cinit at schottelius.org)
+# 
+# This file is part of cinit.
+#
+# cinit is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# cinit is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with cinit. If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# Initialise the /etc/mtab file on Linux:
+# Ubuntu Jaunty manually creates it, we just ignore it
+# and link it to /proc/mounts.
+#
+# This is probably not the perfect way, as /proc/mounts
+# contains more stuff than useful. Maybe we can add a
+# "add mount to mtab" dependency to all mount/X/ services,
+# that depends on mount/root.
+#
+#
+
+. "$(dirname $0)/cinit-conf.read-conf"
+
+set -e
+
+SVC="local-tuning/cleanup-mtab"
+BINARY_PATH="$(which ln)"
+
+# Is mount/proc needed or is it sane to link to an empty /etc/mtab
+# by linking that to a non-existing file?
+NEEDS="mount/root mount/proc"
+
+cinit-conf.svc-create.template "${SVC}"
+cinit-conf.svc-on "${SVC}" "${BINARY_PATH}"
+cinit-conf.svc-param.add "${SVC}" "${C_ON}" "-sf" "/proc/mounts" "/etc/mtab"
+
+cinit-conf.svc.dependency.add "${SVC}" "needs" $NEEDS
+
+exit 0

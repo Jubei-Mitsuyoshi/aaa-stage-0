@@ -1,0 +1,13 @@
+It sometimes looked like the child() from fork() returned earlier
+then the fork() call -- is that possible?
+
+   if(li->status == FE_NOT) {
+      svc_report_status(li->abs_path, "Nothing to execute :-)");
+      /*  
+       * probably a problem: we exit too fast, cinit does not yet have us in
+       * the process list. is that possible? => catch with sleep 
+       */
+      // sleep(2);
+      _exit(0);                 /* nothing there? fine! */
+   }   
+

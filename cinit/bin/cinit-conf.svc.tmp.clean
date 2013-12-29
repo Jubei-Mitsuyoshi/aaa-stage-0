@@ -1,0 +1,58 @@
+#!/bin/sh
+# 
+# 2009      Nico Schottelius (nico-cinit at schottelius.org)
+# 
+# This file is part of cinit.
+#
+# cinit is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# cinit is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with cinit. If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# Cleanup temp directories
+#
+
+################################################################################
+# standard vars stolen from cconf
+__pwd="$(pwd -P)"
+__mydir="${0%/*}"; __abs_mydir="$(cd "$__mydir" && pwd -P)"
+__myname=${0##*/}; __abs_myname="$__abs_mydir/$__myname"
+
+set -e
+. "$(dirname $0)/cinit-conf.read-conf"
+
+
+if [ $# -lt 1 ]; then
+   echo "${__myname}: tmpdirs... "
+   echo ""
+   echo "   I remove those tempdirs on bootup."
+   echo ""
+   exit 23
+fi
+
+SVC="local-tuning/tmp-clean"
+BINARY_PATH="$(which rm)"
+
+# FIXME: We would need all the related partions to be r/w
+# So probably add a warning somewhere or add another argument,
+# specifyng other needs
+NEEDS="mount/root"
+
+cinit-conf.svc-create.template "${SVC}"
+cinit-conf.svc-on "${SVC}" "${BINARY_PATH}"
+cinit-conf.svc-param.add "${SVC}" "${C_ON}" "-rf"
+cinit-conf.svc.dependency.add "${SVC}" "needs" $NEEDS
+
+# all other arguments are temp directories
+cinit-conf.svc-param.add "${SVC}" "${C_ON}" "$@"
+
+exit 0

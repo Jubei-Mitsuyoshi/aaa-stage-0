@@ -1,0 +1,174 @@
+#!/bin/sh
+# 
+# 2009      Nico Schottelius (nico-cinit at schottelius.org)
+# 
+# This file is part of cinit.
+#
+# cinit is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# cinit is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with cinit. If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# Try to migrate upstarts config from ubuntu jaunty to cinit config
+#
+
+set -e
+
+# /etc/event.d/rc-default guesses 2, so we also assume it's 2.
+default_runlevel=2
+
+################################################################################
+#
+# Base layout, same for every OS
+#
+cinit-conf.svc.init
+cinit-conf.svc.categories
+cinit-conf.svc.init.dependencies
+
+################################################################################
+# Sys-v-init on Linux and variants (=upstart) execute rcS before rc2.
+#
+# Upstart on jaunty is starts /etc/event.d/rc-default, which
+# starts /etc/event.d/rcS which starts /etc/init.d/rcS which
+# starts /etc/init.d/rc S which starts the shell scripts in
+# /etc/rcS.d/ (does not sound very efficient to me).
+
+# cinit@cinit-desktop:/etc/event.d$ ls -1 /etc/rcS.d/ | sed 's/^/# /'
+# README: not migrated:
+# S01mountkernfs.sh: sysfs, proc; ignored spufs, /var/run, /lib/init: migrated
+cinit-conf.svc.mount.proc
+cinit-conf.svc.mount.sys
+
+# S01readahead: ignored
+# S02hostname.sh: migrated
+cinit-conf.svc.hostname.linux $(hostname)
+
+# S06keyboard-setup: migrated
+cinit-conf.svc.keymap.linux
+
+# S07linux-restricted-modules-common: ignored
+# S10udev: migrated
+cinit-conf.svc.mount.udev
+cinit-conf.svc.local-tuning.udev.ubuntu
+
+# S11mountdevsubfs.sh: migrated!
+cinit-conf.svc.mount.dev-shm
+cinit-conf.svc.mount.dev-pts
+
+# S13pcmciautils: ignored
+# S15module-init-tools: not migrated: I think modules should be put into services
+# S17procps: migrated
+cinit-conf.svc.sysctl.linux
+
+# S20checkroot.sh: migrated for /
+cinit-conf.svc.mount.root
+
+# S22mtab.sh: manually create mtab; migrated (though a little bit hacky)
+cinit-conf.svc.mtab-clean.linux
+
+# S25brltty: ignored: don't have a braille terminal here to test it
+# S30checkfs.sh: ignored, not yet supported, have to find other mountpoints first
+# S35mountall.sh: ignored: same as S30checkfs.sh
+# S36mountall-bootclean.sh: migrated
+# /var/run is not a tempdir, do not clean it
+cinit-conf.svc.tmp.clean "/tmp" "/var/tmp" "/var/lock"
+cinit-conf.svc.tmp.create "/tmp" "/var/tmp" "/var/lock"
+
+# S37apparmor: ignored
+# S37mountoverflowtmp: ignored, that's a boottime bugfix
+# S37udev-finish: no need to migrate, if having correct dependencies.
+# S39readahead-desktop: ignored, as it seems not to work here
+# S39ufw: disabled here by default -> skip
+# S40networking
+cinit-conf.svc.network.debian
+
+# S45mountnfs.sh: migrated, only much smaller
+cinit-conf.svc.mount.nfs
+
+# S46mountnfs-bootclean.sh: already done (cinit-conf.svc.tmp.*)
+# S49console-setup: migrated
+cinit-conf.svc.setup.console.linux
+
+# S55bootmisc.sh: skipped
+# S55urandom: skipped, should be done later!
+# S70screen-cleanup: skipped, unclean, should be done later!
+# S70x11-common: also skipped, want to finish this script.
+
+################################################################################
+#
+# /etc/rc2.d/ migration
+#
+# cinit@cinit-desktop:/etc/rc2.d$ ls -1
+# README
+# S01policykit: ignored
+# S10acpid: migrated (without module loading)
+cinit-conf.svc.acpid
+# Skipping the following ones currently
+# S10sysklogd
+# S11klogd
+# S12dbus
+# S16ssh
+cinit-conf.svc.sshd
+# S20apport
+# S20hotkey-setup
+# S24hal
+# S25bluetooth
+# S30gdm
+# S50NetworkManager
+# S50avahi-daemon
+# S50cups
+# S50pulseaudio
+# S50rsync
+# S50saned
+# S50system-tools-backends
+# S70bootlogs.sh
+# S70dns-clean
+# S70pppd-dns
+# S89anacron
+# S89atd
+# S89cron
+# S90binfmt-support
+# S98usplash
+# S99acpi-support
+# S99laptop-mode
+# S99ondemand
+# S99rc.local
+# S99rmnologin
+# S99stop-readahead
+
+################################################################################
+#
+# Enable local login with six getties
+#
+cinit-conf.svc.agetty 6
+
+cat << eof
+
+Ubuntu upstart migration completed.
+
+WARNING:
+
+   This is a "lazy" migration: Ubuntu init scripts are migrated
+   similar, but not identical. Some services have been skipped, because
+   they are not necessary with cinit or in general.
+
+   Check /etc/cinit before rebooting with cinit!
+
+KNOWN BUGS:
+
+   S20checkroot.sh: Only / is being fscked, other partitions are ignored.
+
+HINT:
+
+   Make sure init=/sbin/cinit is set in your bootloader.
+
+eof

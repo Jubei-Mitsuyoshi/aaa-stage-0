@@ -1,0 +1,108 @@
+cinit-0.3pre14: 2008-03-17
+   - Added test-suite for cmd
+   - Added support to shutdown services in cinit and cmd
+     (without needs and wants)
+   - Added linux-sysvinit wrapper for shutdown (See
+     scripts/wrapper/linux-sysvinit/shutdown)
+   - Rewrote most parts of cmd (to make it more beautiful)
+   - Changed license to GPL 3.0
+
+cinit-0.3pre13: 2007-09-26
+   - Added -V (get cmd version), -h (help), -p (get pid) to cmd
+   - Cleaned up namemsage in msgq.h
+   - Added global service lock
+   - Splitted of svc.h to svc.h, svc-intern.h and svc-messages.h
+   - Prepared logic splitoff from cinit_ipc_listen()
+   - Fixed bug: fork() has a general race condition
+      (see src/test/fork-latency.c) through use of global lock
+
+cinit-0.3pre12: 2007-09-06
+   - Added DESTDIR support
+   - Added support to get service status via cmd: cmd -s <service>
+      * also supports relative paths to CINIT_DIR ("/etc/cinit")
+   - Fixed git clone problem: hooks are needed for dumb git
+   - Fixed bug: We did not wait for services to finsh, which we depend on being
+     ran once.
+
+cinit-0.3pre11: 2007-09-01
+   - Added basic communication: 
+      * client binary "cmd" with argument -v returns cinit-version
+   - Updated {halt,reboot,poweroff}.kill
+
+cinit-0.3pre10:
+   - Fixed make install target
+   - Added halt.kill, poweroff.kill and reboot.kill (including manpages!)
+   - Fixed invalid comparision in core/cinit.c
+   - Be verbose: Print what we execute
+   - Updated documentation
+
+cinit-0.3pre9: 2007-05-15
+   - Implemented sleeping before respawn (static delay)
+   - Report broken links on execution, but ignore empty services
+   - Cleaned up message queue error reporting
+
+cinit-0.3pre8: 2007-04-06
+   - Updated and merged documentation: Codingstyle and Codingguide
+   - Cleaned sigaction-code (fixes segfault on glibc)
+   - Cleaned object listings
+   - Added notifications at shutdown
+   - Fixed status check
+
+cinit-0.3pre7: 2007-02-17
+   - Many code cleanups
+   - Fixed glibc problem with sigaction (for details view src/core/set_signals.c)
+   - Added general shutdown support (will *NOT* yet stop services,
+     but still stop your system)
+
+cinit-0.3pre6:
+   - Many code cleanups
+   - Added user documentation and cleaned up documentation in general
+
+cinit-0.3pre5:
+   - Finished new SIGCHLD handler
+   - First cleanups for real release.
+   - This version is the first 0.3pre version that can handle respawn!
+
+cinit-0.3pre4:
+   - Re-implemented execution of services.
+   - This version is the first 0.3pre version that COULD bootup your system!
+
+cinit-0.3pre3:
+   - Finished execution all services via the reversed service tree.
+
+cinit-0.3pre2:
+   - Finished generation of the dependency tree.
+
+cinit-0.3pre1:
+   - cinit should now compile on mostly all unices
+   - introduced much new code
+   - THIS IS A DEVELOPER RELEASE, NOT USABLE IN PRODUCTION ENVIRONMENTS.
+
+cinit-0.2.1: (Bugfix release)
+   - Fixed problem in contrib+tools/Makefile when installing
+   - added many new scripts to convert sys-v-init, which are still early beta
+      (see bin/cinit.merge.sysvinit-debian-sid)
+
+cinit-0.2:
+   - Much more verbose error reporting
+   - You can now also disable 'once ran' services,
+   - You can restart services with csevice -r
+   - Online speech in German is available
+   - C_DELAY support - variable delay for sending SIGKILL after SIGTERM
+   - First /etc/csys configuration example (wasserstoff) is available
+   - a Mailing list was created
+   - Added tools to analyze cinit configuration
+      (cinit-vis.pl, cinit.graph.text.c)
+   - Added tools to import and export configuration to XML
+      (make.cconfig.from.xml.rb,cconfig.graph.xml.rb)
+   - Removed unecessary signalling
+   - Added many helper scripts to install services (cinit.install.service*)
+   - Fixed many small bugs in old helper scripts (cinit.add.getty, cinit.get-conf, ...)
+   - Added ccontrol, which allows to control cinit
+   - Added update (-u) via ccontrol
+   - Stripped cservice, which now "only" controls services
+   - Removed swapoff from cinit code, should be handled by off
+   - Much better error and processing descriptions
+   - A bit more verbose reporting
+   - Restructured run_svc, now with better error detection
+   - Removed Kernel panic, when halting system

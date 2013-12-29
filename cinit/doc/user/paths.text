@@ -1,0 +1,121 @@
+cinit - Configuration
+======================
+Nico Schottelius <nico-cinit__@__schottelius.org>
+0.1, for cinit 0.3, Initial Version from 2006-06-03
+:Author Initials: NS
+
+Configuring cinit - the paths used
+
+
+Main structure
+---------------
+The base directory under which all configurations are found
+is '/etc/cinit' (changable via conf/cinit_dir).
+
+The basic hierarchy is shown below:
+----------------------------------------------------------------------
+/etc/cinit
+   svc      -> services                (adjustable: conf/svcdir)
+   conf     -> general configuration   (adjustable: conf/confdir)
+----------------------------------------------------------------------
+
+
+The subdirectory 'conf'
+~~~~~~~~~~~~~~~~~~~~~~~
+In this directory are general configurations located.
+See below for the list of files that are located in this
+directory.
+
+
+The subdirectory 'svc'
+~~~~~~~~~~~~~~~~~~~~~~
+This directory contains the services. A service is a directory.
+
+
+Filenams for executable files
+------------------------------
+When you create something that cinit should execute (like on
+starting a service, on stopping a service, on panic, ...), cinit
+will recognize the following extensions:
+
+. cinit executions extensions
+   -  'name'         - the file that should be executed
+   - `'name'.params` - the parameter to pass to 'name' when executing
+   - `'name'.env`    - the environment to pass to 'name' when executing
+
+
+Name.params
+~~~~~~~~~~~
+The 'params' file is a simple file containing one argument on each
+line.
+
+Example:
+----------------------------------------------------------------------
+[17:34] hydrogenium:cinit-0.3pre6% ls -l /etc/cinit/svc/init/on         
+lrwxrwxrwx 1 root root 9 2006-11-16 09:12 /etc/cinit/svc/init/on -> /bin/echo
+[17:34] hydrogenium:cinit-0.3pre6% cat /etc/cinit/svc/init/on.params  
+The initial service has been started. (first parameter)
+Some other useful information. (second parameter)
+----------------------------------------------------------------------
+
+Name.env
+~~~~~~~~
+The 'env' file contains the environment definition.
+Specify one assignment on each line, containing only "variable=value".
+
+Example:
+----------------------------------------------------------------------
+[18:00] hydrogenium:% cat /etc/cinit/svc/remote-services/tinydns/on.env
+IP=192.168.42.23
+----------------------------------------------------------------------
+
+eof
+
+List of executable files
+------------------------
+This list shows you what files are executable for cinit.
+
+on /  off
+~~~~~~~~~
+The files `on` and `off` are executed if found within a service
+definition. `on` is called when starting the service, `off`
+is called when stoping it.
+
+
+conf/panic
+~~~~~~~~~~
+This file will be executed by cinit if it has to panic.
+Panic situation may occur, when there are heavy problems
+like failing memory allocation in core areas. You can
+change the name of the file in the pre-compilation settings
+in `conf/c_panic`.
+
+If `conf/panic` is missing and cinit has to panic, a builtin
+panic action will be called (see `conf/sulogin`).
+
+
+conf/halt
+~~~~~~~~~
+`conf/halt` will be called when cinit has shutdown all services
+and wants to halt the system.
+
+You can change the name of the file in the pre-compilation settings
+in `conf/c_halt`.
+
+
+conf/poweroff
+~~~~~~~~~~~~~
+`conf/poweroff` will be called when cinit has shutdown all services
+and wants to poweroff the system.
+
+You can change the name of the file in the pre-compilation settings
+in `conf/c_poweroff`.
+
+
+conf/reboot
+~~~~~~~~~~~
+`conf/reboot` will be called when cinit has shutdown all services
+and wants to reboot the system.
+
+You can change the name of the file in the pre-compilation settings
+in `conf/c_reboot`.

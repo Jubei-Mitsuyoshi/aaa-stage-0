@@ -1,0 +1,8 @@
+Released: 2009-11-26
+Changes:
+   * Add install target for bin/
+   * Consistent naming in bin/ (conf, cmd, helper)
+   * Cleanup up some cinit-conf scripts
+   * Cleanup documentation directory
+   * Cleanup scripts directory
+   * Cleanup src installation

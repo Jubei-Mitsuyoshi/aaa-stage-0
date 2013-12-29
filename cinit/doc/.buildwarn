@@ -1,0 +1,24 @@
+
+Welcome to the cinit 
+********************
+
+Hints:
+------
+   - Settings can be found in conf/* (also used for compiling)
+   - Cinit configuration is normally found in /etc/cinit
+
+Documentation
+-------------
+The documentation can be found in doc/:
+
+   - doc/user/  contains documentation for users
+   - doc/devel/ contains documentation for developers
+
+   Please read doc/user/installing-cinit.text BEFORE installing.
+
+Building cinit
+--------------
+
+   "make all"        - to build cinit
+   "make install"    - to install cinit, documentation and core tools
+

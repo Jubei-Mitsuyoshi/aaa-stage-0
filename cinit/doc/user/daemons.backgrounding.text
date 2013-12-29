@@ -1,0 +1,84 @@
+cinit - Daemons backgrounding
+=============================
+Nico Schottelius <nico-cinit==@==schottelius.org>
+0.1, for cinit 0.3, Initial versinon from 2005-06-12
+
+
+This document describes the backgrounding process and how to disable it.
+
+
+
+Definition
+-----------
+A daemon is a program which runs in the background.
+Running in the background means you cannot access the process
+directly (like you can press a key in a shell).
+
+
+Daemons and cinit
+------------------
+cinit normally watches system services and restarts them
+(`respawn` flag in the configuration). If the process goes to background,
+cinit cannot control it directly anymore.
+
+List of daemons and non-forking parameters
+-------------------------------------------
+
+The following daemons / servers are known to avoid backgrounding easily:
+
+- acpid [x86 power management]: -f (undocumentated but works)
+- apache [webserver]:           -DFOREGROUND
+- asterisk [pbx]:               -f
+- bind [dns server/caching]:    -f
+- cardmgr [pcmcia/cardbus]:     -f
+- cron (vixie) [schedular]:     -f
+- cupsd [printer server]:       -f or -F
+- dhclient [dhcp client]:       -d
+- dhcp3 (isc) [dhcp server]:    -f
+- distccd [compile server]:     normal behaviour
+- dnsmasq [dhcp/tfpt/dns]:      -k
+- dovecot [imap/pop3 server]:   -F
+- fam [file alteration monitor]:-f
+- fcron [schedular]:            -f
+- frox [ftp proxy]:             "NoDetach" in config
+- freeradius [radiusd]:         -f
+- gdm [display manager]:        -nodaemon
+- hybrid [irc server]:          -foreground
+- icecast2 [sound streamer]:    normal behaviour
+- mini-lpd [printer server]:    normal behaviour
+- metalog [log server]:         normal behaviour
+- monotone [vcs]:               normal behaviour
+- mpd [music server]:           --no-daemon
+- nessusd ["security server"]:  normal behaviour
+- ntpd [time server]:           -n
+- nylon [socks proxy]:          -f (prints output to terminal)
+- oidentd [identd server]:      -i
+- oops [http proxy]:            normal behaviour
+- openpbx [pbx]:                -f
+- openssh [ssh server]:         -D
+- openvpn [vpn server]:         normal behaviour
+- pbbuttonsd [power management]:normal behaviour
+- portmap  [portmapper]:        -f
+- proftpd [ftp server]:         -n
+- qmail [mta]:                  normal behaviour
+- rsync ["file server"]:        --no-detach
+- silcd ["secure chat server"]: -F, --foreground
+- slapd [ldap]:                 -d
+- snmpd [snmp daemon]:          -f
+- stunnel [ssl wrapper]:        "foreground = yes" in config
+- svnserve [vcs]:               --foreground
+- syslogd [log server]:         -n
+- syslog-ng [log server]:       -F
+- tcpserver [super server]:     normal behaviour
+- udhcpc [dhcp client]:         normal behaviour
+- vsftpd [ftp server]:          normal behaviour (or: config: background=no)
+- xinetd [super server]:        -dontfork
+
+
+Problematic daemons
+-------------------
+Those are the daemons that do not offer the possibility (as of release 0.2):
+
+- atd      (no switch, no configuraton option)
+- inetd    (some variants)
+- nscd     (no switch, no configuraton option)

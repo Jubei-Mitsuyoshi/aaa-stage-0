@@ -1,0 +1,114 @@
+Problems using cinit
+====================
+Nico Schottelius <nico-cinit__@__schottelius.org>
+0.1, for cinit 0.3, Initial Version from 2007-04-24
+:Author Initials: NS
+
+
+Using a high-speed, true dependency aware, profile supporting
+logical acting and reliable init system like cinit is not
+completly problem free. This document describes some common
+problems you may have and their solutions.
+
+
+Possible problems
+-----------------
+
+Confused users
+~~~~~~~~~~~~~~
+Compared to traditional init systems like sys-v-init or bsd-init
+cinit introduces a complet new boot concept. This does not just
+mean that you have services instead of shell-scripts (which is
+one reason cinit is starting up faster), but also that the boot
+order may be changed dynamically at bootup:, if a service fails.
+And even if no service fails, the boot order may be different
+on each boot, because processes are started in parallel  and
+may return earlier or later on each boot. To coordinate the
+parallel running processes, cinit uses depencies, which are pretty
+easy to understad when configurung, but may need some more
+detailled watching at boot to understand it.
+
+The 'confused users'-problem is perhaps also the biggest
+problem for introducing cinit as a replacement to current
+init systems. 
+
+
+Configuration issues
+~~~~~~~~~~~~~~~~~~~~
+
+Not marking services as respawn
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When cinit starts, it will wait for every service to exit.
+So if you have a dependency on a service
+that never exits, the whole init process may hang (dependending
+on the dependencies). If you have services that are intendet
+*not* to exit after start, you *have* to mark those with
+`respawn`: Those services are started and watched by cinit
+and will be restarted. This was a design choice to ensure
+that all 'always running' processes *are* restarted.
+
+I did not find any service that should not exit and not
+have a respawn flag. If you really really really have such
+a service and you can prove to me that the respawn flag
+would do harm to your system, I will think about implementing
+a flag that tells cinit not to wait for it, but mark it
+as successfully run after it has been started.
+
+User interaction
+~~~~~~~~~~~~~~~~
+
+User input
+~~~~~~~~~~
+There may be the situation that you have to press a key
+or enter some data when a service starts up (like entering
+the password for your crypto harddisks). With cinit, this
+will look like a mess, because other services may write to
+the same console the service wrote a user prompt.
+
+The best solution for this problem is in my humble
+opinion to create an user-input daemon that serialises
+the requests and displays one after another.
+
+This could look like this: Your daemon wants to ask for
+a passphrase for the SSL-certificate. You add aa needs
+to this daemon to the 'input-daemon'. When you
+start this service, it will contact the input-daemon
+running on another virtual console and displaying a text
+and an input field that is passed back to this service.
+After that the input daemon changes back to the initial
+console or asks for the next input, if there is another
+request available.
+
+This input daemon may also be run on a graphical (X11) display.
+.
+Output to the user
+~~~~~~~~~~~~~~~~~~
+When cinit starts up there may be many messages printed
+out that also may look like printed random order.
+To prevent your endusers from being confused you can create
+some kind of graphical interface  (like a framebuffer
+or X11 display) that reads the output of cinit and converts
+it to flashing images. It could look like this:
+
+----------------------------------------------------------------------
+
+  Your (graphical?) display:
+  -------------------------------------------------------------- 
+  |  /-----------------\                                       |
+  |  | Red border,     |                                       |
+  |  | failed to start |                                       |
+  |  \-----------------/                                       |
+  |                                                            |
+  |  /------                                                   |
+  |  | Green border,                                           |
+  |    image van                                               |
+  |                                                            |
+  |                                                            |
+  |                                                            |
+  |                                                            |
+  |                                                            |
+  |                                                            |
+  -------------------------------------------------------------- 
+
+
+----------------------------------------------------------------------

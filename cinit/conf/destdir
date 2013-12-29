@@ -1,0 +1,6 @@
+
+
+The destination to install to. This is not used when running cinit,
+but only for installing it. Normally the first line is blank.
+
+cinit-conf uses this file for installing the configuration.

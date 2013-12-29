@@ -1,0 +1,44 @@
+--- !ditz.rubyforge.org,2008-03-06/project 
+name: cinit
+version: "0.5"
+components: 
+- !ditz.rubyforge.org,2008-03-06/component 
+  name: cinit
+- !ditz.rubyforge.org,2008-03-06/component 
+  name: core
+- !ditz.rubyforge.org,2008-03-06/component 
+  name: user interface
+- !ditz.rubyforge.org,2008-03-06/component 
+  name: portability
+- !ditz.rubyforge.org,2008-03-06/component 
+  name: documentation
+- !ditz.rubyforge.org,2008-03-06/component 
+  name: build
+releases: 
+- !ditz.rubyforge.org,2008-03-06/release 
+  name: "0.3"
+  status: :unreleased
+  release_time: 
+  log_events: 
+  - - 2009-09-07 06:28:02.974644 Z
+    - Nico Schottelius <nico@ikn.schottelius.org>
+    - created
+    - The first cleaned up version
+- !ditz.rubyforge.org,2008-03-06/release 
+  name: future
+  status: :unreleased
+  release_time: 
+  log_events: 
+  - - 2009-09-07 06:29:14.264777 Z
+    - Nico Schottelius <nico@ikn.schottelius.org>
+    - created
+    - All things to be fixed in the future.
+- !ditz.rubyforge.org,2008-03-06/release 
+  name: 0.3.1
+  status: :unreleased
+  release_time: 
+  log_events: 
+  - - 2009-09-28 05:32:55.870041 Z
+    - Nico Schottelius <nico@ikn.schottelius.org>
+    - created
+    - Bugfix of 0.3

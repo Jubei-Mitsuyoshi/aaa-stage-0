@@ -1,0 +1,4 @@
+Released: 2009-11-05
+Changes:
+   * Added script to partially migrate Ubuntu Jaunty almost completly to cinit
+   * Added script to create minimal configuration (cinit-conf.config.shell)

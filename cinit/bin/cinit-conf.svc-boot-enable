@@ -1,0 +1,46 @@
+#!/bin/sh
+# 
+# 2009 Nico Schottelius (nico-cinit at schottelius.org)
+# 
+# This file is part of cinit.
+#
+# cinit is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# cinit is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with cinit-conf. If not, see <http://www.gnu.org/licenses/>.
+#
+# Enable a service at boottime: add it to init wants list
+#
+
+set -e
+
+################################################################################
+# standard vars stolen from cconf
+__pwd="$(pwd -P)"
+__mydir="${0%/*}"; __abs_mydir="$(cd "$__mydir" && pwd -P)"
+__myname=${0##*/}; __abs_myname="$__abs_mydir/$__myname"
+
+. "${__abs_mydir}/cinit-conf.read-conf"
+
+
+if [ $# -lt 1 ]; then
+   echo "${__myname}: services... "
+   echo ""
+   echo "   I add the services to init, so they will be started at boot."
+   echo ""
+   exit 1
+fi
+
+SVC="init"
+
+cinit-conf.svc.dependency.add "${SVC}" "wants" "$@"
+
+exit 0
